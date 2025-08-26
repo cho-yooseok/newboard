@@ -234,7 +234,7 @@ async function fetchPostDetails(postId) {
             </div>
             <div class="post-content">${post.content.replace(/\n/g, '<br>')}</div>
             <div class="post-actions">
-                 <button id="post-like-btn" class="${post.likedByCurrentUser ? 'liked' : ''}" onclick="togglePostLike(${post.id})">
+                 <button id="post-like-btn" onclick="togglePostLike(${post.id})">
                     👍 좋아요 (${post.likeCount})
                 </button>
                 ${actionButtons}
@@ -362,10 +362,16 @@ async function togglePostLike(postId) {
         if (!response.ok) throw new Error('좋아요 처리에 실패했습니다.');
 
         const updatedPost = await response.json();
-        // 좋아요 버튼의 텍스트와 스타일을 업데이트
+        // 좋아요 버튼의 텍스트만 업데이트
         const likeButton = document.getElementById('post-like-btn');
         likeButton.textContent = `👍 좋아요 (${updatedPost.likeCount})`;
-        likeButton.classList.toggle('liked', updatedPost.likedByCurrentUser);
+
+        // 좋아요 상태에 따라 알림 메시지 표시
+        if (updatedPost.likedByCurrentUser) {
+            alert('좋아요를 눌렀습니다.');
+        } else {
+            alert('좋아요를 취소하였습니다.');
+        }
 
     } catch (error) {
         alert(error.message);
@@ -374,7 +380,7 @@ async function togglePostLike(postId) {
 
 
 // =================================================================
-// 댓글 (목록, 생성, 삭제, 좋아요)
+// 댓글 (목록, 생성, 수정, 삭제, 좋아요)
 // =================================================================
 
 /**
@@ -395,25 +401,43 @@ async function fetchComments(postId) {
         const comments = await response.json();
         commentsList.innerHTML = '';
         comments.forEach(comment => {
-            let actionButtons = '';
-            // 현재 로그인 사용자가 댓글 작성자일 경우 삭제 버튼 표시
-            if (user && user.username === comment.authorUsername) {
-                actionButtons = `<button onclick="handleDeleteComment(${postId}, ${comment.id})">삭제</button>`;
-            }
-
             const commentDiv = document.createElement('div');
             commentDiv.className = 'comment';
+            commentDiv.id = `comment-${comment.id}`;
+
+            let actionButtons = '';
+            // 현재 로그인 사용자가 댓글 작성자일 경우 수정/삭제 버튼 표시
+            if (user && user.username === comment.authorUsername) {
+                actionButtons = `
+                    <button onclick="showCommentEditForm(${comment.id})">수정</button>
+                    <button onclick="handleDeleteComment(${postId}, ${comment.id})">삭제</button>
+                `;
+            }
+
             commentDiv.innerHTML = `
                 <div class="comment-meta">
                     <strong>${comment.authorUsername}</strong> - 
                     <span>${new Date(comment.createdAt).toLocaleString()}</span>
                 </div>
-                <p>${comment.content}</p>
-                <div class="comment-actions">
-                     <button id="comment-like-btn-${comment.id}" class="${comment.likedByCurrentUser ? 'liked' : ''}" onclick="toggleCommentLike(${postId}, ${comment.id})">
-                        👍 좋아요 (${comment.likeCount})
-                    </button>
-                    ${actionButtons}
+
+                <!-- 댓글 보기 모드 -->
+                <div id="comment-view-${comment.id}">
+                    <p>${comment.content.replace(/\n/g, '<br>')}</p>
+                    <div class="comment-actions">
+                         <button id="comment-like-btn-${comment.id}" onclick="toggleCommentLike(${postId}, ${comment.id})">
+                            👍 좋아요 (${comment.likeCount})
+                        </button>
+                        ${actionButtons}
+                    </div>
+                </div>
+
+                <!-- 댓글 수정 모드 (초기에는 숨김) -->
+                <div id="comment-edit-${comment.id}" style="display: none;">
+                    <textarea class="comment-edit-textarea" rows="3">${comment.content}</textarea>
+                    <div class="comment-edit-actions">
+                        <button onclick="handleEditComment(${postId}, ${comment.id})">저장</button>
+                        <button onclick="hideCommentEditForm(${comment.id})">취소</button>
+                    </div>
                 </div>
             `;
             commentsList.appendChild(commentDiv);
@@ -464,6 +488,53 @@ async function handleCreateComment(event, postId) {
 }
 
 /**
+ * 댓글 수정을 위한 입력 폼을 표시합니다.
+ * @param {number} commentId - 수정할 댓글 ID
+ */
+function showCommentEditForm(commentId) {
+    document.getElementById(`comment-view-${commentId}`).style.display = 'none';
+    document.getElementById(`comment-edit-${commentId}`).style.display = 'block';
+}
+
+/**
+ * 댓글 수정 폼을 숨기고 원래 내용으로 되돌립니다.
+ * @param {number} commentId - 취소할 댓글 ID
+ */
+function hideCommentEditForm(commentId) {
+    document.getElementById(`comment-view-${commentId}`).style.display = 'block';
+    document.getElementById(`comment-edit-${commentId}`).style.display = 'none';
+}
+
+
+/**
+ * 댓글 수정을 처리합니다. (서버에 전송)
+ * @param {number} postId - 현재 게시글 ID
+ * @param {number} commentId - 수정할 댓글 ID
+ */
+async function handleEditComment(postId, commentId) {
+    const content = document.querySelector(`#comment-edit-${commentId} textarea`).value;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/comments/${commentId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ content })
+        });
+
+        if (!response.ok) {
+            throw new Error('댓글 수정에 실패했습니다. 권한을 확인하세요.');
+        }
+
+        alert('댓글이 성공적으로 수정되었습니다.');
+        fetchComments(postId); // 댓글 목록을 새로고침하여 변경사항을 반영
+
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+
+/**
  * 댓글을 삭제합니다.
  * @param {number} postId - 현재 게시글 ID
  * @param {number} commentId - 삭제할 댓글 ID
@@ -504,10 +575,16 @@ async function toggleCommentLike(postId, commentId) {
         if (!response.ok) throw new Error('좋아요 처리에 실패했습니다.');
 
         const updatedComment = await response.json();
-        // 좋아요 버튼의 텍스트와 스타일 업데이트
+        // 좋아요 버튼의 텍스트만 업데이트
         const likeButton = document.getElementById(`comment-like-btn-${commentId}`);
         likeButton.textContent = `👍 좋아요 (${updatedComment.likeCount})`;
-        likeButton.classList.toggle('liked', updatedComment.likedByCurrentUser);
+
+        // 좋아요 상태에 따라 알림 메시지 표시
+        if (updatedComment.likedByCurrentUser) {
+            alert('좋아요를 눌렀습니다.');
+        } else {
+            alert('좋아요를 취소하였습니다.');
+        }
 
     } catch (error) {
         alert(error.message);
@@ -596,11 +673,17 @@ async function deleteUser(userId) {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        if (!response.ok) throw new Error('사용자 삭제에 실패했습니다.');
-        alert('사용자가 삭제되었습니다.');
-        fetchAdminUsers(); // 사용자 목록 새로고침
+
+        if (response.ok) { // 성공 시 (2xx 상태 코드)
+            alert('사용자가 삭제되었습니다.');
+            fetchAdminUsers(); // 목록 새로고침
+        } else { // 실패 시 (4xx, 5xx 상태 코드)
+            const errorData = await response.json(); // 백엔드의 ErrorResponse 객체를 받음
+            // ErrorResponse에 담긴 message 필드를 에러 메시지로 사용
+            throw new Error(errorData.message || '사용자 삭제에 실패했습니다.');
+        }
     } catch(error) {
-        alert(error.message);
+        alert(error.message); // 위에서 던진 에러 메시지를 여기서 alert으로 보여줌
     }
 }
 
@@ -625,11 +708,12 @@ async function fetchAdminPosts(search = '') {
         tableBody.innerHTML = '';
         page.content.forEach(post => {
             const row = tableBody.insertRow();
+            // === 게시글 상태 표시 수정 ===
             row.innerHTML = `
                 <td>${post.id}</td>
                 <td>${post.title}</td>
                 <td>${post.authorUsername}</td>
-                <td>${post.deleted ? '삭제됨' : '활성'}</td>
+                <td>${post.deleted ? '임시 삭제' : '활성'}</td>
                 <td>
                     <button onclick="softDeletePost(${post.id})">임시삭제</button>
                     <button onclick="restorePost(${post.id})">복원</button>

@@ -1,5 +1,7 @@
+// src/main/java/com/example/freeboard/exception/GlobalExceptionHandler.java
 package com.example.freeboard.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,6 +16,18 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    // === 사용자 삭제 실패 등 DB 제약 조건 위반 시 처리 (409 CONFLICT) ===
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+        ErrorResponse errorDetails = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(), // UserService에서 던진 메시지가 여기에 담깁니다.
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
 
     // ResourceNotFoundException 처리 (HTTP 404 NOT FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -45,7 +59,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorDetails = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.FORBIDDEN.value(),
-                "접근 권한이 없습니다: " + ex.getMessage(), // 사용자 친화적 메시지
+                "접근 권한이 없습니다: " + ex.getMessage(),
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
@@ -57,7 +71,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorDetails = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.UNAUTHORIZED.value(),
-                "인증 실패: " + ex.getMessage(), // 사용자 친화적 메시지
+                "인증 실패: " + ex.getMessage(),
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);

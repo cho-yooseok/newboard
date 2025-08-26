@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,26 +31,29 @@ public class Post {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User author; // User 엔티티와 연결
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User author;
+
+    // === 댓글 연관관계 설정 추가 ===
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer viewCount = 0;
 
-    // --- 좋아요 기능  ---
-    private Integer likeCount = 0; // 좋아요 수 필드 추가
+    private Integer likeCount = 0;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<PostLike> likes = new HashSet<>(); // 좋아요를 누른 기록 집합
+    private Set<PostLike> likes = new HashSet<>();
 
-    // --- 관리자 기능 추가 부분: soft delete ---
-    private boolean deleted = false; // 게시글 삭제 여부 (true: 삭제됨, false: 활성)
+    private boolean deleted = false;
 
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        this.deleted = false; // 기본값 false
+        this.deleted = false;
     }
 
     @PreUpdate
