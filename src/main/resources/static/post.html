@@ -1,0 +1,43 @@
+<!-- src/main/resources/static/post.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 상세</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <a href="/index.html" class="back-btn">&larr; 목록으로</a>
+        <nav id="auth-nav"></nav>
+    </header>
+    <main id="post-detail-container">
+        <!-- 게시글 상세 내용은 JS로 동적으로 추가됩니다. -->
+    </main>
+    <hr>
+    <section id="comments-section">
+        <h3>댓글</h3>
+        <div id="comments-list">
+            <!-- 댓글 목록은 JS로 동적으로 추가됩니다. -->
+        </div>
+        <div id="comment-form-container">
+            <!-- 댓글 작성 폼은 JS로 동적으로 추가됩니다. (로그인 시) -->
+        </div>
+    </section>
+</div>
+<script src="/js/main.js"></script>
+<script>
+    window.onload = function() {
+        updateAuthUI();
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+        if (postId) {
+            fetchPostDetails(postId);
+            fetchComments(postId);
+        }
+    };
+</script>
+</body>
+</html>

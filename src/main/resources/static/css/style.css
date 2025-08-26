@@ -1,0 +1,225 @@
+/* src/main/resources/static/css/style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 960px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+h1, h2, h3 {
+    color: #0056b3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+table th {
+    background-color: #f2f2f2;
+}
+
+table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+a {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+button, .btn {
+    background-color: #0056b3;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #004494;
+}
+
+.write-btn {
+    display: block;
+    width: 100px;
+    margin-left: auto;
+    text-align: center;
+}
+
+.back-btn {
+    padding: 8px 12px;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 5px;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+    text-decoration: none;
+}
+
+/* Form Styles */
+.form-container {
+    max-width: 500px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Post Detail */
+#post-detail-container .post-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+#post-detail-container .post-meta {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 20px;
+}
+#post-detail-container .post-content {
+    white-space: pre-wrap; /* Preserve line breaks */
+    line-height: 1.8;
+}
+.post-actions, .comment-actions {
+    margin-top: 10px;
+}
+.post-actions button, .comment-actions button {
+    margin-right: 10px;
+}
+.like-btn.liked, button.liked {
+    background-color: #28a745; /* Green when liked */
+}
+.like-btn.liked:hover, button.liked:hover {
+    background-color: #218838;
+}
+
+
+/* Comments */
+#comments-section {
+    margin-top: 30px;
+}
+.comment {
+    border: 1px solid #e1e1e1;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background: #fafafa;
+}
+.comment-meta {
+    font-size: 0.8em;
+    color: #777;
+    margin-bottom: 5px;
+}
+#comment-form-container textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+/* Admin Tabs */
+.tabs {
+    overflow: hidden;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+.tab-link {
+    background-color: #f1f1f1;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+.tab-link:hover {
+    background-color: #ddd;
+}
+.tab-link.active {
+    background-color: #ccc;
+}
+.tab-content {
+    display: none;
+}
+.tab-content input[type="text"] {
+    padding: 8px;
+    margin-right: 5px;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+.pagination button {
+    margin: 0 5px;
+}
+.pagination button.active {
+    background-color: #004494;
+    font-weight: bold;
+}
+
+/* Search Container */
+.search-container {
+    margin-bottom: 20px;
+    text-align: right;
+}
+.search-container input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}

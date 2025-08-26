@@ -4,69 +4,55 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자유 게시판</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/board.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="header">
-    <div class="container">
-        <h1 class="logo"><a href="/">자유 게시판</a></h1>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="/">홈</a></li>
-                <li id="auth-links">
-                    <a href="/register.html">회원가입</a>
-                    <a href="/login.html" style="margin-left: 10px;">로그인</a>
-                </li>
-                <li id="write-post-link" style="display: none;"><a href="/write-post.html">글쓰기</a></li>
-                <li id="admin-page-link" style="display: none;"><a href="/admin.html">관리자 페이지</a></li>
-            </ul>
+<div class="container">
+    <header>
+        <h1>자유 게시판</h1>
+        <nav id="auth-nav">
+            <!-- 로그인/로그아웃 버튼은 JS로 동적으로 추가됩니다. -->
         </nav>
-    </div>
-</header>
+    </header>
 
-<main class="container content">
-    <h2 class="section-title">최신 게시글</h2>
-    <div class="board-header">
-        <div class="board-search">
-            <input type="text" id="search-input" placeholder="검색어를 입력하세요">
-            <button id="search-button" class="btn-search">검색</button>
+    <main>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="제목 또는 내용으로 검색">
+            <button onclick="searchPosts()">검색</button>
         </div>
-        <div class="board-actions">
-            <a href="/write-post.html" class="btn-write" id="write-post-button" style="display: none;">글쓰기</a>
+        <table id="posts-table">
+            <thead>
+            <tr>
+                <th>제목</th>
+                <th>작성자</th>
+                <th>작성일</th>
+                <th>조회수</th>
+                <th>좋아요</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- 게시글 목록은 JS로 동적으로 추가됩니다. -->
+            </tbody>
+        </table>
+        <div class="pagination" id="pagination">
+            <!-- 페이지네이션은 JS로 동적으로 추가됩니다. -->
         </div>
-    </div>
+        <button onclick="location.href='/write.html'" class="write-btn">글쓰기</button>
+    </main>
+</div>
 
-    <table class="board-table">
-        <thead>
-        <tr>
-            <th class="col-id">번호</th>
-            <th class="col-title">제목</th>
-            <th class="col-author">작성자</th>
-            <th class="col-date">작성일</th>
-            <th class="col-views">조회수</th>
-            <th class="col-likes">좋아요</th>
-            <th class="col-comments">댓글</th>
-        </tr>
-        </thead>
-        <tbody id="post-list">
-        <tr><td colspan="7" class="no-posts">게시글을 불러오는 중...</td></tr>
-        </tbody>
-    </table>
-
-    <div class="pagination" id="pagination">
-    </div>
-</main>
-
-<footer class="footer">
-    <div class="container">
-        <p>&copy; 2025 자유 게시판. All rights reserved.</p>
-    </div>
-</footer>
-
-<script type="module" src="js/main.js"></script>
-<script type="module" src="js/index.js"></script>
+<script src="/js/main.js"></script>
+<script>
+    // 페이지가 로드되면 실행될 함수들
+    window.onload = function() {
+        updateAuthUI(); // 로그인 상태에 따라 UI 업데이트
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 0; // URL에서 페이지 번호 가져오기
+        const search = urlParams.get('search') || ''; // URL에서 검색어 가져오기
+        document.getElementById('search-input').value = search;
+        fetchPosts(page, search); // 게시글 목록 불러오기
+    };
+</script>
 </body>
 </html>

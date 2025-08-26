@@ -1,120 +1,104 @@
 <!-- src/main/resources/static/admin.html  -->
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 페이지 - 자유 게시판</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/admin.css">
+    <title>관리자 페이지</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<header class="header">
-    <div class="container">
-        <h1 class="logo"><a href="/">자유 게시판</a></h1>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="/">홈</a></li>
-                <li id="auth-links">
-                    <!-- JS will populate this -->
-                </li>
-                <li id="write-post-link" style="display: none;"><a href="/write-post.html">글쓰기</a></li>
-                <li id="admin-page-link" style="display: none;"><a href="/admin.html">관리자 페이지</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
+<div class="container">
+    <header>
+        <h1>관리자 페이지</h1>
+        <a href="/index.html" class="back-btn">메인으로 돌아가기</a>
+    </header>
 
-<main class="container content">
-    <h2 class="section-title">관리자 대시보드</h2>
-
-    <div id="admin-error-message" class="error-message" style="display: none;"></div>
-
-    <div id="admin-content" style="display: none;">
-        <div class="admin-tabs">
-            <button class="tab-button active" data-tab="posts">게시글 관리</button>
-            <button class="tab-button" data-tab="users">사용자 관리</button>
-            <button class="tab-button" data-tab="comments">댓글 관리</button> <!-- 댓글 관리 탭 추가 -->
+    <main>
+        <div class="tabs">
+            <button class="tab-link active" onclick="openTab(event, 'users')">사용자 관리</button>
+            <button class="tab-link" onclick="openTab(event, 'posts')">게시글 관리</button>
+            <button class="tab-link" onclick="openTab(event, 'comments')">댓글 관리</button>
         </div>
 
-        <!-- 게시글 관리 탭 -->
-        <div id="posts-tab" class="tab-content active">
-            <h3 class="subsection-title">게시글 관리</h3>
-            <div class="board-header">
-                <div class="board-search">
-                    <input type="text" id="admin-post-search-input" placeholder="게시글 제목/내용 검색">
-                    <button id="admin-post-search-button" class="btn-search">검색</button>
-                </div>
-            </div>
-            <table class="board-table">
+        <!-- 사용자 관리 -->
+        <div id="users" class="tab-content" style="display: block;">
+            <h2>사용자 목록</h2>
+            <table id="admin-users-table">
                 <thead>
                 <tr>
-                    <th class="col-id">ID</th>
-                    <th class="col-title">제목</th>
-                    <th class="col-author">작성자</th>
-                    <th class="col-date">작성일</th>
-                    <th class="col-views">조회수</th>
-                    <th>상태</th>
-                    <th class="col-actions">관리</th>
-                </tr>
-                </thead>
-                <tbody id="admin-post-list"></tbody>
-            </table>
-            <div class="pagination" id="admin-post-pagination"></div>
-        </div>
-
-        <!-- 사용자 관리 탭 -->
-        <div id="users-tab" class="tab-content">
-            <h3 class="subsection-title">사용자 관리</h3>
-            <table class="board-table">
-                <thead>
-                <tr>
-                    <th class="col-id">ID</th>
-                    <th>사용자명</th>
+                    <th>ID</th>
+                    <th>사용자 이름</th>
                     <th>역할</th>
-                    <th class="col-actions">관리</th>
+                    <th>가입일</th>
+                    <th>관리</th>
                 </tr>
                 </thead>
-                <tbody id="admin-user-list"></tbody>
+                <tbody></tbody>
             </table>
-            <div class="pagination" id="admin-user-pagination"></div>
         </div>
 
-        <!-- 댓글 관리 탭 (추가) -->
-        <div id="comments-tab" class="tab-content">
-            <h3 class="subsection-title">댓글 관리</h3>
-            <div class="board-header">
-                <div class="board-search">
-                    <input type="text" id="admin-comment-search-input" placeholder="댓글 내용 검색">
-                    <button id="admin-comment-search-button" class="btn-search">검색</button>
-                </div>
-            </div>
-            <table class="board-table">
+        <!-- 게시글 관리 -->
+        <div id="posts" class="tab-content">
+            <h2>게시글 목록</h2>
+            <input type="text" id="admin-post-search" placeholder="게시글 검색...">
+            <button onclick="searchAdminPosts()">검색</button>
+            <table id="admin-posts-table">
                 <thead>
                 <tr>
-                    <th class="col-id">ID</th>
-                    <th class="col-content">내용</th>
-                    <th class="col-author">작성자</th>
-                    <th>게시글</th>
-                    <th class="col-date">작성일</th>
-                    <th class="col-actions">관리</th>
+                    <th>ID</th>
+                    <th>제목</th>
+                    <th>작성자</th>
+                    <th>상태</th>
+                    <th>관리</th>
                 </tr>
                 </thead>
-                <tbody id="admin-comment-list"></tbody>
+                <tbody></tbody>
             </table>
-            <div class="pagination" id="admin-comment-pagination"></div>
         </div>
 
-    </div>
-</main>
+        <!-- 댓글 관리 -->
+        <div id="comments" class="tab-content">
+            <h2>댓글 목록</h2>
+            <input type="text" id="admin-comment-search" placeholder="댓글 내용 검색...">
+            <button onclick="searchAdminComments()">검색</button>
+            <table id="admin-comments-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>내용</th>
+                    <th>작성자</th>
+                    <th>원문 게시글</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+<script src="/js/main.js"></script>
+<script>
+    window.onload = function() {
+        checkAdminAccess();
+        fetchAdminUsers();
+        fetchAdminPosts();
+        fetchAdminComments();
+    };
 
-<footer class="footer">
-    <div class="container">
-        <p>&copy; 2025 자유 게시판. All rights reserved.</p>
-    </div>
-</footer>
-
-<script type="module" src="js/main.js"></script>
-<script type="module" src="js/admin.js"></script>
+    function openTab(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+</script>
 </body>
 </html>
