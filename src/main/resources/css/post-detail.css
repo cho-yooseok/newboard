@@ -1,0 +1,79 @@
+
+/* C:\Users\admin\Desktop\freeboard\freeboard\src\main\resources\static\css\post-detail.css */
+
+/* 게시글 상세 페이지 스타일 */
+.post-detail-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+
+.post-title {
+    font-size: 2.2em;
+    color: #34495e;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.post-meta {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 25px;
+    display: flex; /* 좋아요 버튼 정렬을 위해 flex 추가 */
+    align-items: center; /* 세로 중앙 정렬 */
+    flex-wrap: wrap; /* 내용이 길어지면 다음 줄로 넘어가도록 */
+}
+
+.post-content {
+    line-height: 1.8;
+    margin-bottom: 30px;
+    white-space: pre-wrap; /* 줄 바꿈 유지 */
+}
+
+.post-actions {
+    text-align: right;
+    margin-bottom: 30px;
+}
+
+.post-actions button, .post-actions .btn-list {
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-decoration: none;
+    display: inline-block; /* 버튼과 링크를 같은 줄에 */
+    margin-left: 10px;
+}
+
+.btn-list {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-list:hover {
+    background-color: #5a6268;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #333;
+    border: none;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
