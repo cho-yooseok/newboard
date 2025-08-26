@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", // 루트 경로 (index.html 등)
                                 "/*.html", // 모든 HTML 파일 (예: /login.html, /register.html 등)
-                                "/css/**", // CSS 파일
+                                "/static/css/**", // CSS 파일
                                 "/js/**", // JavaScript 파일
                                 "/img/**", // 이미지 파일
                                 "/favicon.ico", // 파비콘

@@ -1,0 +1,142 @@
+/* 기본 설정 */
+body {
+    font-family: 'Malgun Gothic', sans-serif;
+    margin: 0;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* 링크 스타일 */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* 헤더 */
+.header {
+    background-color: #fff;
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo a {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+.logo a:hover {
+    text-decoration: none;
+}
+
+.main-nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+.main-nav li {
+    margin-left: 20px;
+}
+
+#auth-links span {
+    margin-right: 15px;
+}
+
+/* 메인 컨텐츠 */
+.content {
+    padding: 30px 0;
+    flex-grow: 1;
+}
+
+.section-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* 푸터 */
+.footer {
+    background-color: #343a40;
+    color: #fff;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* 공통 버튼 스타일 */
+.primary-btn, .btn-search, .btn-write, .btn-list, .btn-edit, .btn-delete, .btn-cancel,
+.btn-soft-delete, .btn-restore, .btn-hard-delete, .btn-delete-user, .btn-grant-admin, .btn-revoke-admin, .btn-delete-comment {
+    display: inline-block;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.primary-btn, .btn-search, .btn-write {
+    background-color: #007bff;
+    color: white;
+}
+.primary-btn:hover, .btn-search:hover, .btn-write:hover {
+    background-color: #0056b3;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-list, .btn-cancel, .btn-soft-delete, .btn-restore {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-list:hover, .btn-cancel:hover, .btn-soft-delete:hover, .btn-restore:hover {
+    background-color: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-delete, .btn-hard-delete, .btn-delete-user, .btn-delete-comment {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-delete:hover, .btn-hard-delete:hover, .btn-delete-user:hover, .btn-delete-comment:hover {
+    background-color: #c82333;
+    color: white;
+    text-decoration: none;
+}
+
+
+/* 에러 메시지 */
+.error-message {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 5px;
+}
+.success-message {
+    color: #28a745;
+    font-size: 13px;
+    margin-top: 10px;
+}

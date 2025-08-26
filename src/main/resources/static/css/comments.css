@@ -1,0 +1,62 @@
+/* src/main/resources/static/css/comments.css */
+
+.comments-section {
+    margin-top: 40px;
+}
+
+.comment-form-container textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+.btn-comment-submit {
+    display: block;
+    width: 120px;
+    margin-left: auto;
+    padding: 8px 15px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.comment-list {
+    margin-top: 20px;
+}
+.comment-item {
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+.comment-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 10px;
+}
+.comment-author {
+    font-weight: bold;
+    color: #333;
+}
+.comment-date {
+    margin-left: 10px;
+}
+.comment-content {
+    line-height: 1.6;
+}
+.comment-actions {
+    text-align: right;
+    margin-top: 10px;
+}
+.comment-actions button {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    margin-left: 10px;
+}

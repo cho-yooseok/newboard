@@ -1,0 +1,80 @@
+/* src/main/resources/static/css/board.css */
+
+.board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.board-search input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.board-table th, .board-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.board-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.board-table .col-title {
+    text-align: left;
+    width: 50%;
+}
+.board-table .col-title a:hover {
+    font-weight: bold;
+}
+
+.board-table .no-posts {
+    padding: 50px 0;
+    text-align: center;
+    color: #888;
+}
+
+/* 페이지네이션 */
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a, .pagination span {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    color: #007bff;
+    border-radius: 4px;
+}
+
+.pagination .current-page {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+}
+
+.pagination a:hover {
+    background-color: #e9ecef;
+    text-decoration: none;
+}
+
+.pagination .disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
