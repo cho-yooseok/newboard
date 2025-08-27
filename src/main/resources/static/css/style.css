@@ -146,17 +146,6 @@ button:hover, .btn:hover {
 .post-actions .btn, .post-actions button {
     margin-right: 0; /* 개별 마진 제거 */
 }
-/* === 게시글/댓글 액션 버튼 수정 끝 === */
-
-/* === 좋아요 버튼 색상 변경 제거 === */
-/*
-.like-btn.liked, button.liked {
-    background-color: #28a745;
-}
-.like-btn.liked:hover, button.liked:hover {
-    background-color: #218838;
-}
-*/
 
 
 /* Comments */
