@@ -11,7 +11,6 @@
 <div class="container">
     <header>
         <h1>관리자 페이지</h1>
-        <!-- === 링크 텍스트 수정 및 클래스 제거 === -->
         <a href="/index.html">메인페이지로 돌아가기</a>
     </header>
 
@@ -37,6 +36,8 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <!-- ▼▼▼ 사용자 페이지네이션 추가 ▼▼▼ -->
+            <div id="users-pagination" class="pagination"></div>
         </div>
 
         <!-- 게시글 관리 -->
@@ -56,6 +57,8 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <!-- ▼▼▼ 게시글 페이지네이션 추가 ▼▼▼ -->
+            <div id="posts-pagination" class="pagination"></div>
         </div>
 
         <!-- 댓글 관리 -->
@@ -75,6 +78,8 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <!-- ▼▼▼ 댓글 페이지네이션 추가 ▼▼▼ -->
+            <div id="comments-pagination" class="pagination"></div>
         </div>
     </main>
 </div>
@@ -82,9 +87,10 @@
 <script>
     window.onload = function() {
         checkAdminAccess();
-        fetchAdminUsers();
-        fetchAdminPosts();
-        fetchAdminComments();
+        // 페이지 로드 시 각 목록의 첫 페이지를 불러옵니다.
+        fetchAdminUsers(0);
+        fetchAdminPosts(0, '');
+        fetchAdminComments(0, '');
     };
 
     function openTab(evt, tabName) {

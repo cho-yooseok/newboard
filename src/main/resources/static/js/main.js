@@ -185,7 +185,7 @@ async function fetchPosts(page = 0, search = '') {
         });
 
         // 페이지네이션 버튼 렌더링
-        renderPagination(pagination, pageData, search);
+        renderPagination(pagination, pageData, fetchPosts, search);
 
     } catch (error) {
         tableBody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
@@ -480,7 +480,9 @@ async function handleCreateComment(event, postId) {
         });
         if (!response.ok) throw new Error('댓글 작성에 실패했습니다.');
 
-        fetchComments(postId); // 댓글 목록 새로고침
+        // 댓글 작성 후 댓글 목록 새로고침 및 입력창 비우기
+        document.getElementById('comment-content').value = '';
+        fetchComments(postId);
 
     } catch (error) {
         alert(error.message);
@@ -609,16 +611,18 @@ function checkAdminAccess() {
 // --- 관리자: 사용자 관리 ---
 /**
  * 관리자 페이지에서 모든 사용자 목록을 가져옵니다.
+ * @param {number} page - 조회할 페이지 번호
  */
-async function fetchAdminUsers() {
+async function fetchAdminUsers(page = 0) {
     const tableBody = document.querySelector("#admin-users-table tbody");
+    const paginationContainer = document.getElementById("users-pagination");
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: getAuthHeaders() });
+        const response = await fetch(`${API_BASE_URL}/api/admin/users?page=${page}`, { headers: getAuthHeaders() });
         if (!response.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
 
-        const page = await response.json();
+        const pageData = await response.json();
         tableBody.innerHTML = '';
-        page.content.forEach(user => {
+        pageData.content.forEach(user => {
             const row = tableBody.insertRow();
             row.innerHTML = `
                 <td>${user.id}</td>
@@ -633,8 +637,11 @@ async function fetchAdminUsers() {
                 <td><button onclick="deleteUser(${user.id})">삭제</button></td>
             `;
         });
+        renderPagination(paginationContainer, pageData, fetchAdminUsers, '');
+
     } catch(error) {
         tableBody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
+        paginationContainer.innerHTML = ''; // 에러 발생 시 페이지네이션 비우기
     }
 }
 
@@ -645,7 +652,7 @@ async function fetchAdminUsers() {
 async function updateUserRole(userId) {
     const role = document.getElementById(`role-select-${userId}`).value;
     if (!confirm(`${userId}번 사용자의 역할을 ${role}(으)로 변경하시겠습니까?`)) {
-        fetchAdminUsers(); // 취소 시 선택을 원래대로 되돌림
+        fetchAdminUsers(0); // 취소 시 선택을 원래대로 되돌리기 위해 첫 페이지를 다시 로드
         return;
     }
 
@@ -658,7 +665,7 @@ async function updateUserRole(userId) {
         alert('역할이 성공적으로 변경되었습니다.');
     } catch (error) {
         alert(error.message);
-        fetchAdminUsers(); // 실패 시 목록 새로고침
+        fetchAdminUsers(0); // 실패 시 목록 새로고침
     }
 }
 
@@ -674,16 +681,15 @@ async function deleteUser(userId) {
             headers: getAuthHeaders()
         });
 
-        if (response.ok) { // 성공 시 (2xx 상태 코드)
+        if (response.ok) {
             alert('사용자가 삭제되었습니다.');
-            fetchAdminUsers(); // 목록 새로고침
-        } else { // 실패 시 (4xx, 5xx 상태 코드)
-            const errorData = await response.json(); // 백엔드의 ErrorResponse 객체를 받음
-            // ErrorResponse에 담긴 message 필드를 에러 메시지로 사용
+            fetchAdminUsers(0); // 목록 새로고침
+        } else {
+            const errorData = await response.json();
             throw new Error(errorData.message || '사용자 삭제에 실패했습니다.');
         }
     } catch(error) {
-        alert(error.message); // 위에서 던진 에러 메시지를 여기서 alert으로 보여줌
+        alert(error.message);
     }
 }
 
@@ -691,24 +697,25 @@ async function deleteUser(userId) {
 // --- 관리자: 게시글 관리 ---
 /**
  * 관리자 페이지에서 모든 게시글 목록을 가져옵니다 (삭제된 글 포함).
+ * @param {number} page - 조회할 페이지 번호
  * @param {string} search - 검색어
  */
-async function fetchAdminPosts(search = '') {
+async function fetchAdminPosts(page = 0, search = '') {
     const tableBody = document.querySelector("#admin-posts-table tbody");
-    let url = `${API_BASE_URL}/api/admin/posts`;
+    const paginationContainer = document.getElementById("posts-pagination");
+    let url = `${API_BASE_URL}/api/admin/posts?page=${page}`;
     if (search) {
-        url += `?search=${encodeURIComponent(search)}`;
+        url += `&search=${encodeURIComponent(search)}`;
     }
 
     try {
         const response = await fetch(url, { headers: getAuthHeaders() });
         if (!response.ok) throw new Error('게시글 정보를 불러올 수 없습니다.');
 
-        const page = await response.json();
+        const pageData = await response.json();
         tableBody.innerHTML = '';
-        page.content.forEach(post => {
+        pageData.content.forEach(post => {
             const row = tableBody.insertRow();
-            // === 게시글 상태 표시 수정 ===
             row.innerHTML = `
                 <td>${post.id}</td>
                 <td>${post.title}</td>
@@ -721,8 +728,11 @@ async function fetchAdminPosts(search = '') {
                 </td>
             `;
         });
+        renderPagination(paginationContainer, pageData, fetchAdminPosts, search);
+
     } catch(error) {
         tableBody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
+        paginationContainer.innerHTML = ''; // 에러 발생 시 페이지네이션 비우기
     }
 }
 
@@ -731,7 +741,7 @@ async function fetchAdminPosts(search = '') {
  */
 function searchAdminPosts() {
     const search = document.getElementById('admin-post-search').value;
-    fetchAdminPosts(search);
+    fetchAdminPosts(0, search);
 }
 
 /**
@@ -741,7 +751,8 @@ function searchAdminPosts() {
 async function softDeletePost(postId) {
     if (!confirm(`${postId}번 글을 임시 삭제하시겠습니까?`)) return;
     await fetch(`${API_BASE_URL}/api/admin/posts/${postId}/soft-delete`, { method: 'POST', headers: getAuthHeaders() });
-    fetchAdminPosts(); // 목록 새로고침
+    const search = document.getElementById('admin-post-search').value;
+    fetchAdminPosts(0, search); // 목록 새로고침
 }
 
 /**
@@ -751,7 +762,8 @@ async function softDeletePost(postId) {
 async function restorePost(postId) {
     if (!confirm(`${postId}번 글을 복원하시겠습니까?`)) return;
     await fetch(`${API_BASE_URL}/api/admin/posts/${postId}/restore`, { method: 'POST', headers: getAuthHeaders() });
-    fetchAdminPosts(); // 목록 새로고침
+    const search = document.getElementById('admin-post-search').value;
+    fetchAdminPosts(0, search); // 목록 새로고침
 }
 
 /**
@@ -761,29 +773,32 @@ async function restorePost(postId) {
 async function hardDeletePost(postId) {
     if (!confirm(`${postId}번 글을 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) return;
     await fetch(`${API_BASE_URL}/api/admin/posts/${postId}/hard-delete`, { method: 'DELETE', headers: getAuthHeaders() });
-    fetchAdminPosts(); // 목록 새로고침
+    const search = document.getElementById('admin-post-search').value;
+    fetchAdminPosts(0, search); // 목록 새로고침
 }
 
 
 // --- 관리자: 댓글 관리 ---
 /**
  * 관리자 페이지에서 모든 댓글 목록을 가져옵니다.
+ * @param {number} page - 조회할 페이지 번호
  * @param {string} search - 검색어
  */
-async function fetchAdminComments(search = '') {
+async function fetchAdminComments(page = 0, search = '') {
     const tableBody = document.querySelector("#admin-comments-table tbody");
-    let url = `${API_BASE_URL}/api/admin/comments`;
+    const paginationContainer = document.getElementById("comments-pagination");
+    let url = `${API_BASE_URL}/api/admin/comments?page=${page}`;
     if (search) {
-        url += `?search=${encodeURIComponent(search)}`;
+        url += `&search=${encodeURIComponent(search)}`;
     }
 
     try {
         const response = await fetch(url, { headers: getAuthHeaders() });
         if (!response.ok) throw new Error('댓글 정보를 불러올 수 없습니다.');
 
-        const page = await response.json();
+        const pageData = await response.json();
         tableBody.innerHTML = '';
-        page.content.forEach(comment => {
+        pageData.content.forEach(comment => {
             const row = tableBody.insertRow();
             row.innerHTML = `
                 <td>${comment.id}</td>
@@ -795,8 +810,11 @@ async function fetchAdminComments(search = '') {
                 </td>
             `;
         });
+        renderPagination(paginationContainer, pageData, fetchAdminComments, search);
+
     } catch(error) {
         tableBody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
+        paginationContainer.innerHTML = ''; // 에러 발생 시 페이지네이션 비우기
     }
 }
 
@@ -805,7 +823,7 @@ async function fetchAdminComments(search = '') {
  */
 function searchAdminComments() {
     const search = document.getElementById('admin-comment-search').value;
-    fetchAdminComments(search);
+    fetchAdminComments(0, search);
 }
 
 /**
@@ -815,7 +833,8 @@ function searchAdminComments() {
 async function deleteCommentAsAdmin(commentId) {
     if (!confirm(`${commentId}번 댓글을 영구 삭제하시겠습니까?`)) return;
     await fetch(`${API_BASE_URL}/api/admin/comments/${commentId}`, { method: 'DELETE', headers: getAuthHeaders() });
-    fetchAdminComments(); // 목록 새로고침
+    const search = document.getElementById('admin-comment-search').value;
+    fetchAdminComments(0, search); // 목록 새로고침
 }
 
 
@@ -827,9 +846,11 @@ async function deleteCommentAsAdmin(commentId) {
  * 페이지네이션 버튼을 생성하여 화면에 표시합니다.
  * @param {HTMLElement} container - 페이지네이션 버튼이 들어갈 부모 요소
  * @param {object} pageData - 서버에서 받은 페이지 정보 (totalPages, number 등)
+ * @param {Function} fetchFunction - 페이지 이동 시 호출할 함수
  * @param {string} search - 현재 검색어 (페이지 이동 시 유지하기 위함)
  */
-function renderPagination(container, pageData, search) {
+function renderPagination(container, pageData, fetchFunction, search) {
+    if (!container) return; // 컨테이너가 없으면 종료
     container.innerHTML = '';
     const { totalPages, number: currentPage } = pageData;
 
@@ -839,7 +860,7 @@ function renderPagination(container, pageData, search) {
     if (currentPage > 0) {
         const prevButton = document.createElement('button');
         prevButton.innerText = '이전';
-        prevButton.onclick = () => fetchPosts(currentPage - 1, search);
+        prevButton.onclick = () => fetchFunction(currentPage - 1, search);
         container.appendChild(prevButton);
     }
 
@@ -850,7 +871,7 @@ function renderPagination(container, pageData, search) {
         if (i === currentPage) {
             pageButton.classList.add('active'); // 현재 페이지는 활성화 스타일 적용
         }
-        pageButton.onclick = () => fetchPosts(i, search);
+        pageButton.onclick = () => fetchFunction(i, search);
         container.appendChild(pageButton);
     }
 
@@ -858,7 +879,7 @@ function renderPagination(container, pageData, search) {
     if (currentPage < totalPages - 1) {
         const nextButton = document.createElement('button');
         nextButton.innerText = '다음';
-        nextButton.onclick = () => fetchPosts(currentPage + 1, search);
+        nextButton.onclick = () => fetchFunction(currentPage + 1, search);
         container.appendChild(nextButton);
     }
 }
