@@ -1,0 +1,31 @@
+@RequestParam
+HTTP 요청의 쿼리 파라미터를 메서드 매개변수로 바인딩해주는 어노테이션
+예: /posts?search=스프링 이라는 요청이 들어오면 search 변수에 "스프링"이 들어감
+
+required = false
+필수 값이 아니라는 의미
+즉, search 파라미터가 없어도 에러가 발생하지 않음. (값이 없으면 null로 들어옴)
+
+String search
+실제 메서드에서 사용할 변수. 검색 키워드를 문자열로 받음
+
+즉, 이 코드는
+검색어(search)가 쿼리 파라미터로 들어오면 받아오고, 없어도 괜찮다"는 뜻입니다.
+
+예를 들어
+/posts -> search = null
+/posts?search=java -> search ="java"
+
+
+@RequestParam
+HTTP 요청의 쿼리 파라미터를 메서드 매개변수로 바인딩해주는 어노테이션
+예: /posts?search=스프링 이라는 요청이 들어오면 search 변수에 "스프링"이 들어감
+
+ResponseEntity.ok(...)
+HTTP 200 OK 상태 코드와 함께 응답을 생성하는 메서드
+
+ResponseEntity.ok(posts) -> 200 OK   게시글 목록 JSON 응답
+ResponseEntity.noContent().build() -> 204 No Content (본문도 없고, 상태 코드도 200 대신 204)
+ResponseEntity.ok().build() -> 200 OK  + 본문 없음
+
+

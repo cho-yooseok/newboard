@@ -1,0 +1,47 @@
+package com.example.freeboard.controller;
+
+import com.example.freeboard.dto.RegisterRequest; // 회원가입 요청 시 필요한 데이터를 담는 DTO
+import com.example.freeboard.dto.AuthRequest; // 로그인 요청 시 필요한 데이터를 담는 DTO
+import com.example.freeboard.dto.JwtAuthenticationResponse; // JWT 인증 성공 시 반환할 데이터를 담는 DTO
+import com.example.freeboard.dto.UserDto; // 사용자 정보를 담는 DTO
+
+
+/*
+사용자 인증 관련 API를 처리하는 rest 컨트롤러
+회원가입 로그인 현재 로그인된 사용자 정보 조회 기능을 제공합니다.
+*/
+@RestController
+
+
+
+public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtTokenProvier tokenProvider) {
+}
+
+AuthController 클래스의 생성자(Constructor)  입니다
+
+public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtTokenProvier tokenProvider) {
+    this.userService = userService;
+    this.authenticationManager = authenticationManager;
+    this.tokenProvider = tokenProvider;
+}
+
+해석하면
+public AuthController(...)
+AuthController 객체가 생성될 때 실행되는 생성자.
+Spring이 의존성 주입(Dependency Injection, DI)을 통해 필요한 객체들을 자동으로 넣어줌.
+
+UserService userService
+사용자 관련 로직(회원가입, 사용자 조회 등)을 담당하는 서비스 클래스
+
+AuthenticationManager authenticationManager
+스프링 시큐리티에서 로그인 요청이 들어왔을 때 아이디/비밀번호 검증을 처리하는 객체
+
+JwtTokenProvider tokenProvider
+로그인 성공 시 JWT(Json Web Token)를 생성하고 검증하는 역할을 하는 클래스
+
+this.userService = userService;
+생성자 파라미터로 받은 userService 를 현재 AuthController 클래스의 필드에 저장
+
+즉, 이 생성자는
+AuthController 가 실행될 때, 회원 서비스(UserService), 인증 관리자(AuthenticationManager),
+JWT제공자(JwtTokenProvider) 객체를 주입받아 내부에서 사용할 수 있게 설정한다
