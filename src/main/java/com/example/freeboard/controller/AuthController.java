@@ -41,11 +41,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            // UserService의 registerUser 메서드 호출 (RegisterRequest를 인자로 받도록 서비스도 조정 필요)
-            // 참고: UserService의 registerUser는 현재 UserRegisterDto를 받도록 되어 있을 수 있으므로,
-            // 이 부분을 RegisterRequest로 맞추거나, AuthController에서 UserRegisterDto로 변환해야 합니다.
-            // 여기서는 registerRequest가 UserService의 registerUser에 바로 전달된다고 가정합니다.
-            userService.registerUser(registerRequest); // Assuming UserService has registerUser(RegisterRequest)
+            userService.registerUser(registerRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 성공적으로 완료되었습니다!");
         } catch (IllegalArgumentException e) {
             // 사용자 이름 중복 등 비즈니스 로직 예외 처리
