@@ -287,3 +287,83 @@ authentication 객체에서 사용자의 주체(Principal) 정보를 가져옴.
 
 (UserDetails)
 getPrincipal() 메서드가 반환하는 객체를 UserDetails 타입으로 캐스팅
+
+
+
+
+
+/*
+로그인 요청을 받아서 아이디와 비밀번호를 확인하고,
+성공하면 JWT 토큰을 만들어서 돌려주는 기능입니다.
+
+@param authRequest 로그인할 때 보낸 정보(아이디, 비밀번호)
+@return JWT 토큰 + 사용자 이름 + 역할(ADMIN/USER)
+*/
+@PostMapping("/login")
+public ResponseEntity<JwtAuthenticationResponse> authenticateUser(@Valid @RequestBody AuthRequest authRequest) {
+    // 1. AuthenticationManager()
+
+}
+
+new UsernamePasswordAuthenticationToken(...)
+사용자가 보낸 로그인 정보(아이디와 비밀번호)를 담는 인증 토큰 객체를 생성합니다.
+여기서는 아직 "검증 전 " 상태입니다.
+
+authenticationManager.authenticate(...)
+Spring Security의 AuthenticationManager 를 사용해 아이디와 비밀번호를 실제로 검증합니다.
+내부적으로 userDetailsService와 passwordEncoder를 사용해서
+아이디가 DB에 존재하는지,
+비밀번호가 맞는지 확인합니다.
+
+Authentication authentication = ...
+검증이 성공하면, 인증이 완료된 사용자 정보를 담은 Authentication 객체를 반환받아 authentication 변수에 저장합니다.
+
+이 객체 안에는 아이디, 권한(Role), 인증 성공 여부 등의 정보가 들어있습니다.
+
+
+
+Authentication authentication = authenticationManager.authenticate(
+    new UsernamePasswordAuthenticationToken(
+        authRequest.getUsername(),  // 입력한 아이디
+        authRequest.getPassword()   // 입력한 비밀번호
+    )
+);
+종합설명
+이 한줄은 사용자가 입력한 아이디/비밀번호를 기반으로 로그인 검증을 수행하고,
+성공 시 인증된 사용자 정보를 가져오는 과정입니다
+
+
+
+// 2. 인증된 사용자 주체(Principal)에서 UserDetails를 가져옵니다.
+UserDetails userDetails = (userDetails) authentication.getPrincipal();
+String authenticatedUsername = userDetails.getUsername()
+
+
+해석
+authentication.getPrincipal()
+Authenticaion 객체에서 주체(Princial) 를 꺼냅니다
+"Principal"은 보통 로그인한 사용자 정보를 의미합니다.
+Spring Secutiry 에서는 보통 UserDetails 타입으로 반환됩니다.
+
+
+(UserDetails) authentication.getPrincipal();
+getPrincipal() 의 반환타입이 object 라서 ,  UserDetails 로 캐스팅합니다.
+
+UserDetails 는 Spring Security에서 제공하는 사용자 정보 인터페이스(아이디, 비밀번호, 권한 등 을 담음)입니다
+
+
+userDetails.getUsername();
+인증된 사용자 정보에서 아이디(username) 값을 가져옵니다
+예를들어, 로그인 시 authRequest.getUsername() 으로 입력받은 아이디가 검증에 성공했다면, 여기서 그 값이 나옵니다
+
+authenticatedUsername
+최종적으로 인증된 사용자의 아이디를 문자열 변수에 저장합니다.
+
+
+
+UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+String authenticatedUsername = userDetails.getUsername();
+
+
+이 코드는 로그인 검증이 끝난 Authentication 객체에서 사용자 정보를 꺼내고,
+그 안에서 인증된 사용자 아이디를 가져오는 과정입니다
