@@ -641,3 +641,17 @@ Optional은  null 대신 사용되는 컨테이너 객체로, 값이 있으면 U
 
 원한다면 userOptional 에서 값이 있는지 확인 isPresent(), ifPresent() 하거나, 없을 때 대체값(orElse(), orElseThrow())을
 지정해서 처리할 수 있습니다.
+
+
+
+Optional<user> userOptional 을 직역하면
+Optional<User>
+User 객체를 담을 수도 있고, 안 담을 수도 있는 박스    같은 타입
+
+userOptional
+그 박스의 변수 이름
+
+
+userOptional
+은 User를 가질 수도 있고(null 일 수도 있음),
+안 가질 수도 있는 변수

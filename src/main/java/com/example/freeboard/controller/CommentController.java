@@ -56,7 +56,6 @@ public class CommentController {
         return new ResponseEntity<>(new CommentResponseDto(createdComment, false), HttpStatus.CREATED);
     }
 
-    // --- 좋아요 기능 추가 부분 시작 ---
     // 댓글 좋아요 토글 엔드포인트
     @PostMapping("/{commentId}/like")
     public ResponseEntity<CommentResponseDto> toggleCommentLike(@PathVariable Long postId, // postId는 URL 경로를 위해 유지
@@ -75,7 +74,6 @@ public class CommentController {
         // 좋아요 상태가 변경된 후의 댓글 정보를 반환
         return ResponseEntity.ok(updatedComment);
     }
-    // --- 좋아요 기능 추가 부분 끝 ---
 
     // 댓글 수정 (작성자만 가능)
     @PutMapping("/{commentId}")

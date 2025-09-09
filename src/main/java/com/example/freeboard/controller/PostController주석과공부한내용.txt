@@ -1,0 +1,267 @@
+주석
+
+package com.example.freeboard.controller;
+
+import com.example.freeboard.dto.PostCreateRequest;   // 게시글 생성 요청 DTO
+import com.example.freeboard.dto.PostResponseDto;     // 게시글 응답 DTO
+import com.example.freeboard.dto.PostUpdateRequest;   // 게시글 수정 요청 DTO
+import com.example.freeboard.entity.User;             // 사용자 엔티티
+import com.example.freeboard.service.PostService;     // 게시글 관련 비즈니스 로직 서비스
+import com.example.freeboard.service.UserService;     // 사용자 관련 비즈니스 로직 서비스
+import jakarta.validation.Valid;                      // 요청 데이터 검증(유효성 체크) 어노테이션
+import org.springframework.data.domain.Page;          // 페이징 처리용 객체
+import org.springframework.data.domain.Sort;          // 정렬 처리 클래스
+import org.springframework.data.web.PageableDefault;  // 페이징 기본값 설정
+import org.springframework.http.HttpStatus;          // HTTP 상태 코드 (200, 201, 404 등)
+import org.springframework.http.ResponseEntity;      // 응답 객체
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // 로그인 사용자 정보 가져오기
+import org.springframework.security.core.userdetails.UserDetails; // 스프링 시큐리티 사용자 정보 객체
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+
+@RestController
+// @RestController -> REST API(데이터만 반환하는 컨트롤러)임을 나타냄
+@RequestMapping("/api/posts")
+// @RequestMapping("/api/posts") -> 이 컨트롤러의 기본 주소(prefix) 설정
+public class PostController {
+
+    private final PostService postService;
+    // 게시글 관련 기능을 처리하는 서비스
+
+    private final UserService userService;
+    // 사용자 관련 기능을 처리하는 서비스
+
+    public PostController(PostService postService, UserService userService) {
+        this.postService = postService;
+        this.userService = userService;
+    }
+    // 생성자 주입 (스프링이 PostService, UserService 객체를 자동으로 넣어줌)
+
+
+    // --- 게시글 목록 조회 ---
+    @GetMapping
+    // @GetMapping -> HTTP GET 요청 처리 (게시글 목록 불러오기)
+    public ResponseEntity<Page<PostResponseDto>> getAllPosts(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            // @PageableDefault -> 페이지 크기/정렬 기본값 설정 (10개씩, 최신순)
+            @RequestParam(required = false) String search)
+            // @RequestParam(required=false) -> 검색어 파라미터, 없어도 됨
+        Page<PostResponseDto> posts = postService.getAllPosts(pageable, search);
+        // 서비스 호출 -> 게시글 목록 조회
+        return ResponseEntity.ok(posts);
+        // 200 OK + 데이터 반환
+
+
+    //---게시글 상세 조회
+    @GetMapping("/{id}")
+    // @GetMapping("/{id}") -> 특정 게시글 상세 조회
+    public ResponseEntity<PostResponseDto> getPostById(@PathVariable Long id,
+                                                       @AuthenticaionPrincipal(expression = "null") UserDatails userDetails) {
+
+           // @PathVariable -> URL 에서 {id} 값 추출
+           // @AuthenticationPrincipal -> 현재 로그인 사용자 정보 가져오기
+
+           Optional<User> currentUserOpt = Optional.empty();
+           // currentUserOpt 라는 변수를 만들었는데, 현재는 User 값이 들어있지 않고
+           // 비어있는 Optional 상태로 초기화한다
+
+           if (userDetails != null) {
+            currentUserOpt = userService.findByUsername(userDetails.getUsername());
+            // 로그인한 경우 DB에서 사용자 찾기
+
+        PostResponseDto postDto = postService.getPostById(id, currentUserOpt);
+        // 서비스 호출 (조회수 증가, 좋아요 여부 포함)
+        return ResponseEntity.ok(postDto);
+        // 200 OK + 게시글 반환
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+기초 개념
+1. Controller (컨트롤러)
+사용자의 요청(HTTP 요청)을 받아서 -> 서비스에 전달 -> 응답 (HTTP 응답) 반환하는 역할
+MVC (Model-View-Controller) 구조에서 "Controller" 부분
+
+2. Service (서비스)
+비즈니스 로직 담당 (실제 기능을 구현하는 부분)
+예 : 게시글 저장, 조회, 수정, 삭제, 좋아요 처리
+
+3. DTO (Data Transfer Object)
+데이터 전달용 객체
+DB 엔티티 그대로 클라이언트에 보내지 않고, 필요한 데이터만 뽑아서 보냄
+
+4. ResponseEntity
+HTTP 응답을 표현하는 객체
+ResponseEntity.ok(data) -> 200 OK + 데이터
+new ResponseEntity<>(data, HttpsStatus.CREATED) -> 201 Created + 데이터
+
+5. @AuthenticaionPrincipal
+로그인한 사용자 정보를 가져올 때 사용
+Spring Security가 로그인된 사용자 정보를 User 객체로 넣어줌
+
+6. Optional
+값이 있을 수도 있고, 없을 수도 있는 객체를 안전하게 다루기 위한 클래스
+Optional.empty() -> 값 없음
+Optional.of(user) -> 값 있음
+
+7. 페이징(Pageable, Page)
+많은 게시글을 한 번에 불러오면 느려짐 -> 일정 개수씩 나눠서 가져옴
+Pageable -> 요청 정보 (몇 번째 페이지인지, 몇 개씩 가져올지)
+Page<PostResponseDto> -> 실제 데이터 + 페이징 관련 정보 포함
+
+->
+PostController 는 게시글 관련 API를 모아둔 컨트롤러이고
+"게시글 목록 조회, 상세조회, 수정용 조회, 좋아요, 생성, 수정, 삭제" 기능을 제공하고 있습니다.
+
+
+
+        /*
+        Page<PostResponseDto> posts = postService.getAllPosts(pageable, search);
+
+        Page<PostResponseDto>
+        Spring Data JPA 에서 제공하는 페이지네이션(Pagination) 결과 객체입니다.
+        즉, 단순히 List<PostResponseDto>가 아니라, 전체 게시글 중에서 특정 페이지에 해당하는 데이터 묶음을 의미
+        Page 안에는 게시글 목록 뿐만 아니라, 전체 페이지 수, 현재 페이지 번호, 총 데이터 개수 같은 부가 정보도 들어있습니다
+
+        postService.getAllPosts(pageable, search)
+        -> postService의 getAllPosts 메서드를 호출하는 부분
+        인자로 pageable 과 search 를 넘기고 있습니다.
+
+        pageable
+        Spring Data 에서 제공하는 페이징/정렬 정보 객체 (예: 페이지 번호, 페이지 크기, 정렬 기준)
+
+        search
+        검색 키워드 (예: 제목이나 내용에 특정 단어가 포함된 게시글만 조회)
+
+        */
+
+
+
+/*
+Optional<User>
+-> User 객체를 감쌀 수 있는 Optional 타입입니다.
+
+Optional 은 "값이 있을 수도 있고 없을 수도 있는 상황"을 명시적으로 표현하기 위한 클래스
+(null 체크를 대신해주는 도구라고 생각하면 됩니다.)
+
+
+Optional.empty()
+"비어있는 Optional"을 생성합니다
+즉, 안에 User 객체가 들어 있지 않은 상태를 의미합니다.
+
+currentUserOpt
+변수 이름으로 보아 "현재 사용자(current user)"를 담으려고 만든 Optional 객체인데,
+아직 값이 없으니 비어 있는 상태로 초기화한 것입니다.
+
+->
+currentUserOpt 라는 변수를 만들었는데, 현재는 User 값이 들어있지 않고 비어 있는 Optional 상태로 초기화한다
+
+Optional<User> currentUserOpt = Optional.empty();
+
+
+
+currentUserOpt = userService.findByUsername(userDetails.getUsername());
+
+userDetails.getUsername()
+userDetails 객체에서 사용자의 아이디(또는 username) 값을 꺼냅니다
+
+userService.findByUsername(...)
+userService 안의 findByUsername 메서드를 호출해서, 해당 username 을 가진 User를 DB에서 찾아옵니다.
+보통 반환타입이 Optional<User>일 가능성이 높습니다. (사용자가 없을 수도 있기 때문입니다.)
+
+currentUserOpt = ...
+찾은 결과 (Optional<user>)를 currentUserOpt 변수에 저장합니다.
+
+
+userDetails에서 꺼낸 username으로 DB를 조회해서,
+해당 사용자를 Optional<User> 형태로 currentUserOpt에  저장한다.
+
+currentUserOpt = userService.findByUsername(userDetails.getUsername());
+
+
+
+@AuthenticationPrincipal(expression = "null")
+
+@AuthenticationPrincipal을 사용하긴 하지만, expression을 'null'로 줬기 때문에 실제로는
+로그인 사용자 정보를 주입하지 않고 null 처리한다
+
+
+PostResponseDto postDto = posrService.getPostByIdViewconut(id);
+
+PostService.getPostByIdNoViewCount(id)
+-> postService 안에 있는 getPostByIdNoViewCount 메서드를 호출합니다.
+
+인자로 id (게시글의 고유 식별자, 보통 Long 타입)를 전달합니다.
+이름에서 보듯이 해당 ID로 게시글을 가져오되, 조회수(view count)는 증가시키지 않고
+가져오는 메서드입니다.
+
+PostResponseDto
+게시글 정보를 클라이언트에 전달하기 위해 만든 DTO(Data Transfer Object)
+DB 엔티티 그대로가 아니라, 필요한 정보만 담아 전달합니다.
+
+postDto
+조회된 게시글 정보를 담는 변수입니다.
+
+view count
+조회수
+
+->
+id 값으로 DB에서 게시글을 찾아오되, 조회수는 올리지 않고 PostResponseDto 형태로 가져와서
+postDto 변수에 담는다.
+
+PostResponseDto postDto = postService.getPostByIdNoViewCount(id);
+
+
+@AuthenticationPrincipal UserDetails userDetails
+현재 로그인한 사용자의 정보를 userDetails 라는 이름의 변수에 담아서 사용하겠다
+
+
+
+
+
+User currentUser = userService.findByUsername(userDetails.getUsername());
+
+userDetails.getUsername()
+현재 로그인한 사용자의 아이디(Username)를 가져옴
+Spring Security 에서 인증된 사용자 정보를 담는 UserDetails 객체에서 꺼냄
+
+userService.findByUsername(...)
+서비스 계층(userService)을 통해 DB에서 해당 사용자 이름으로 사용자 정보를 조회
+
+User currentUser
+조회된 사용자 정보를 User 엔티티 객체로 받아 저장
+
+현재 로그인한 사용자의 아이디를 꺼내서, DB에서 해당 사용자를 찾아 currentUser 변수에 담는다
+
+
+
+return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
+
+new ResponseEntity<>(...)
+스프링에서 HTTP 응답을 만들 때 사용하는 객체
+
+createdPost
+응답의 본문(body)에 담길 데이터
+(앞에서 생성된 게시글 정보 PostResponseDto
+
+
+@RequestBody PostUpdateRequest postRequest
+
+@RequestBody
+클라이언트가 보낸 HTTP 요청의 Body(JSON 형식 데이터)를 자바 객체로 변환해서 매개변수에 바인딩해줌

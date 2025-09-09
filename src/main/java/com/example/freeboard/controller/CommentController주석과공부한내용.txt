@@ -1,0 +1,195 @@
+package com.example.freeboard.controller;
+// 현재 클래스가 속한 패키지 이름을 정의합니다.
+// 패키지는 "폴더"와 비슷한 개념으로, 관련된 클래스들을 묶어놓기 위한 네임스페이스 역할을 합니다.
+
+import com.example.freeboard.dto.CommentCreateRequest;
+import com.example.freeboard.dto.CommentResponseDto;
+import com.example.freeboard.dto.CommentUpdateRequest;
+import com.example.freeboard.entity.Comment;
+import com.example.freeboard.entity.User;
+import com.example.freeboard.service.CommentService;
+import com.example.freeboard.service.UserService;
+// 다른 패키지에 있는 클래스들을 사용하기 위해 import 합니다.
+// dto: 데이터 전송 객체 (클라이언트 ↔ 서버 간 데이터 전달용)
+// entity: 데이터베이스와 매핑되는 객체
+// service: 비즈니스 로직(실제 처리)을 담당하는 계층
+
+import jakarta.validation.Valid;
+// @Valid 어노테이션을 사용하기 위해 가져옵니다.
+// 요청(Request) 데이터가 유효한지 검사할 때 활용됩니다.
+
+import org.springframework.beans.factory.annotation.Autowired;
+// @Autowired: 스프링이 자동으로 객체(빈)를 주입해주는 기능을 제공하는 어노테이션입니다.
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+// ResponseEntity는 응답(Response)을 만들 때 사용합니다.
+// 상태 코드(200, 201, 401 등)와 응답 데이터를 함께 보낼 수 있습니다.
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+// 스프링 시큐리티(Security)에서 로그인한 사용자 정보를 가져오기 위해 사용합니다.
+
+import org.springframework.web.bind.annotation.*;
+// @RestController, @GetMapping, @PostMapping 같은 REST API 관련 어노테이션들을 사용하기 위해 import 합니다.
+
+import java.util.List;
+// 여러 개의 댓글을 리스트 형태로 반환할 때 사용합니다.
+
+/**
+ * 댓글 관련 요청을 처리하는 컨트롤러 클래스입니다.
+ * 컨트롤러는 "요청(클라이언트 → 서버)"을 받아서
+ * 서비스 계층에 전달하고, "응답(서버 → 클라이언트)"을 돌려주는 역할을 합니다.
+ */
+@RestController
+// @RestController: REST API를 처리하는 컨트롤러임을 표시합니다.
+// JSON 데이터를 요청/응답으로 주고받을 수 있게 됩니다.
+
+@RequestMapping("/api/posts/{postId}/comments")
+// 이 컨트롤러에 속한 모든 메서드의 URL 앞부분에 "/api/posts/{postId}/comments" 가 붙습니다.
+// {postId} 는 변수처럼, 각 게시글의 ID를 의미합니다.
+public class CommentController {
+
+    private final CommentService commentService;
+    private final UserService userService;
+    // 서비스 계층을 사용하기 위해 필드를 선언합니다.
+    // CommentService: 댓글 관련 로직 담당
+    // UserService: 사용자 관련 로직 담당
+
+    @Autowired
+    // @Autowired: 스프링이 CommentService와 UserService 객체를 자동으로 넣어줍니다. (의존성 주입)
+    public CommentController(CommentService commentService, UserService userService) {
+        this.commentService = commentService;
+        this.userService = userService;
+        // 생성자를 통해 서비스 객체를 주입받습니다.
+    }
+
+    // -------------------- 댓글 조회 --------------------
+    @GetMapping
+    // HTTP GET 요청을 처리하는 메서드입니다. (댓글 목록 조회)
+
+    public ResponseEntity<List<CommentResponseDto>> getCommentsByPostId(
+            @PathVariable Long postId,
+            // @PathVariable: URL 경로에 있는 {postId} 값을 가져옵니다.
+            @AuthenticationPrincipal(expression = "null") UserDetails userDetails) {
+            // @AuthenticationPrincipal: 현재 로그인한 사용자의 정보를 가져옵니다.
+            // userDetails == null → 로그인하지 않은 상태라는 의미입니다.
+
+        User currentUser = null;
+        // 현재 로그인한 사용자를 저장할 변수. 기본은 null(비로그인 상태)
+
+        if (userDetails != null) {
+            // 로그인한 사용자가 있을 경우 실행
+            currentUser = userService.findByUsername(userDetails.getUsername()).orElse(null);
+            // 로그인한 사용자 이름(username)으로 User 엔티티를 데이터베이스에서 조회합니다.
+        }
+
+        List<CommentResponseDto> commentDtos = commentService.getCommentsByPostId(postId, currentUser);
+        // 서비스 계층에 postId와 currentUser를 넘겨서 댓글 목록을 가져옵니다.
+        // currentUser가 있으면, 각 댓글에 "내가 좋아요 눌렀는지 여부"도 포함됩니다.
+
+        return ResponseEntity.ok(commentDtos);
+        // HTTP 상태 200 OK와 함께 댓글 리스트를 응답으로 반환합니다.
+    }
+
+    // -------------------- 댓글 작성 --------------------
+    @PostMapping
+    // HTTP POST 요청을 처리하는 메서드입니다. (댓글 작성)
+
+    public ResponseEntity<CommentResponseDto> createComment(
+            @PathVariable Long postId,
+            // 어떤 게시글에 댓글을 달지 알기 위해 postId를 받습니다.
+            @Valid @RequestBody CommentCreateRequest commentRequest,
+            // @RequestBody: 요청 바디(JSON)를 CommentCreateRequest 객체로 변환합니다.
+            // @Valid: 입력값 검증(예: 빈 값 금지, 길이 제한 등)
+            @AuthenticationPrincipal UserDetails userDetails) {
+            // 로그인한 사용자 정보를 가져옵니다.
+
+        User currentUser = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("인증된 사용자를 찾을 수 없습니다."));
+        // 로그인한 사용자 정보를 DB에서 가져옵니다.
+        // 만약 없으면 예외 발생 (정상적으로는 발생하지 않아야 함)
+
+        Comment createdComment = commentService.createComment(postId, commentRequest, currentUser);
+        // 서비스 계층에 위임하여 댓글을 생성합니다.
+
+        return new ResponseEntity<>(new CommentResponseDto(createdComment, false), HttpStatus.CREATED);
+        // 새로 작성된 댓글을 DTO로 감싸서 반환합니다.
+        // HttpStatus.CREATED(201) → "리소스가 성공적으로 생성됨"을 의미합니다.
+        // 좋아요는 처음 생성 시 무조건 false 입니다.
+    }
+
+    // -------------------- 댓글 좋아요 토글 --------------------
+    @PostMapping("/{commentId}/like")
+    // HTTP POST 요청으로 "/{commentId}/like" 경로를 처리합니다. (댓글 좋아요/취소)
+
+    public ResponseEntity<CommentResponseDto> toggleCommentLike(
+            @PathVariable Long postId,
+            // postId는 경로상 필요하므로 받지만, 메서드 안에서 직접 사용하지 않을 수도 있습니다.
+            @PathVariable Long commentId,
+            // 좋아요를 누르려는 댓글 ID
+            @AuthenticationPrincipal UserDetails userDetails) {
+            // 로그인한 사용자 정보
+
+        if (userDetails == null) {
+            // 로그인하지 않은 경우
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            // 401 Unauthorized 응답을 반환합니다.
+        }
+
+        User currentUser = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("인증된 사용자를 찾을 수 없습니다."));
+        // 로그인한 사용자 정보를 DB에서 조회합니다.
+
+        CommentResponseDto updatedComment = commentService.toggleCommentLike(commentId, currentUser);
+        // 서비스 계층에서 좋아요를 토글(눌렀으면 취소, 안 눌렀으면 추가)합니다.
+
+        return ResponseEntity.ok(updatedComment);
+        // 변경된 댓글 정보를 응답으로 반환합니다. (200 OK)
+    }
+
+    // -------------------- 댓글 수정 --------------------
+    @PutMapping("/{commentId}")
+    // HTTP PUT 요청으로 "/{commentId}" 경로를 처리합니다. (댓글 수정)
+
+    public ResponseEntity<CommentResponseDto> updateComment(
+            @PathVariable Long commentId,
+            // 수정할 댓글 ID
+            @Valid @RequestBody CommentUpdateRequest commentRequest,
+            // 요청 바디(JSON) → CommentUpdateRequest 객체로 변환
+            @AuthenticationPrincipal UserDetails userDetails) {
+            // 로그인한 사용자 정보
+
+        User currentUser = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("인증된 사용자를 찾을 수 없습니다."));
+        // 로그인한 사용자 엔티티 조회
+
+        CommentResponseDto updatedCommentDto = commentService.updateComment(commentId, commentRequest, currentUser);
+        // 서비스 계층에 댓글 수정 요청 (작성자 검증 포함)
+
+        return ResponseEntity.ok(updatedCommentDto);
+        // 수정된 댓글 정보를 200 OK 응답으로 반환
+    }
+
+    // -------------------- 댓글 삭제 --------------------
+    @DeleteMapping("/{commentId}")
+    // HTTP DELETE 요청으로 "/{commentId}" 경로를 처리합니다. (댓글 삭제)
+
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable Long commentId,
+            // 삭제할 댓글 ID
+            @AuthenticationPrincipal UserDetails userDetails) {
+            // 로그인한 사용자 정보
+
+        User currentUser = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("인증된 사용자를 찾을 수 없습니다."));
+        // 로그인한 사용자 엔티티 조회
+
+        commentService.deleteComment(commentId, currentUser);
+        // 서비스 계층에 댓글 삭제 요청 (작성자 검증 포함)
+
+        return ResponseEntity.noContent().build();
+        // 204 No Content → 정상 삭제됨. 반환 데이터는 없음.
+    }
+}
+
