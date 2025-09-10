@@ -1,0 +1,129 @@
+package com.example.freeboard.dto;
+// DTO (Data Transfer Object) 패키지
+// Entity 를 그대로 노출하지 않고, API 응답/요청에 맞는 데이터 구조를 정의하는 계층
+
+import com.example.freeboard.entity.Comment;
+// Comment 엔티티를 참조 (Entity -> DTO 변환 시 사용)
+
+import lombok.Builder;
+// Lombok 어노테이션 : 빌더 패턴 메서드 자동 생성
+
+import lombok.Getter;
+// Lombok 어노테이션 : 모든 필드에 대해 Getter 메서드 자동생성
+// 불변 객체(DTO)에 적합
+
+import java.time.LocalDateTime;
+// 댓글 작성 시간(createdAt)을 다루기 위한 Java8 날짜/시간 API
+
+/**
+관리자(admin)가 댓글 (Comment) 정보를 확인할 때 사용하는 응답 DTO
+일반 사용자에게는 보여주지 않는 추가 정보(게시글 제목 등)도 포함
+Entity(Comment)를 직접 반환하지 않고, 필요한 데이터만 가공해서 제공
+**/
+
+@Getter // 각 필드에 대해 Getter 메서드를 자동 생성
+@Builder // 빌더 패턴을 사용해 객체 생성 가능하게 함
+public class AdminCommentResponseDto {
+
+    // 댓글 고유 ID
+    private Long id;
+
+    // 댓글 내용
+    private String content;
+
+    // 댓글 작성자의 사용자명 (탈퇴 시 "탈퇴한 사용자"로 표시)
+    private String authorUsername;
+
+    // 댓글 작성 일시
+    private LocalDateTime createdAt;
+
+    // 댓글이 속한 게시글의 ID
+    private Long postId;
+
+    // 댓글이 속한 게시글의 제목 (삭제된 경우 "삭제된 게시글"로 표시)
+    private String postTitle;
+
+    /**
+    Entity(Comment)를 AdminCommentResponseDto 로 변환하는 정적 메서드
+    - Entity 를 직접 반환하지 않고, DTO로 가공해서 클라이언트에 전달하기 위함
+    **/
+    public static AdminCommentResponseDto fromEntity(Comment comment) {
+        return AdminCommentResponseDto.builder()
+            .id(comment.getId())    // 댓글 ID 매핑
+            .content(comment.getContent())  // 댓글 내용 매핑
+            // 작성자가 존재하면 username, 없으면 "탈퇴한 사용자" 처리
+            .authorUsername(comment.getAutor() != null ? comment.getAuthor().getUsername() : "탈퇴한 사용자")
+            .createdAt(comment.getCreatedAt())  // 작성일시 매핑
+            // 게시글이 존재하면 postId, 없으면 null
+            .postId(comment.getPost() != null ? comment.getPost().getId90 : null)
+            // 게시글이 존재하면 제목, 없으면 "삭제된 게시글" 처리
+            .postTitle(comment.getPost() != null ? comment.getPost().getTitile() : "삭제된 게시글")
+            .build(); // 빌더 패턴을 이용해 객체 생성
+    }
+
+}
+
+
+
+
+해설
+public static AdminCommentResponseDto fromEntity(Comment comment) {
+}
+
+public
+접근 제어자 어디서든 접근 가능
+
+static
+객체를 생성하지 않고 클래스 이름으로 바로 호출 가능
+
+AdminCommentResponseDto
+메서드의 반환 타입 (리턴할 객체의 자료형)
+
+fromEntity
+메서드 이름 ("엔티티에서 변환한다" 라는 의미)
+
+(Comment comment)
+매개변수, Comment 타입의 객체 하나를 입력받음
+
+
+Comment 엔티티 객체를 받아서 AdminCommentResponseDto 객체로 변환해주는 정적(static) 메서드
+
+
+
+
+return AdminCommentResponseDto.builder()
+
+return
+메서드의 반환값을 돌려준다
+
+AdminCommentResponseDto.builder()
+AdminCommentResponseDto 클래스 안에 정의된 Builder 패턴의 시작 메서드를 호출한다
+
+즉,
+AdminCommentResponseDto 객체를 빌더 패턴을 사용해서 만들기 시작한다  는 뜻입니다.
+
+
+
+.id(comment.getId())
+
+.id(...)
+AdminCommentResponseDto의 빌더(Builer) 안에 있는 id 필드에 값을 넣는 메서드
+
+comment.getId()
+Comment 엔티티에서 id 값을 꺼내오는 메서드
+
+->
+Comment 객체의 id 값을 꺼내와서, AdminCommentResponseDto 를 만들 때 그 id 필드에 채운다   는 의미
+
+
+
+.content(comment.getContent())
+
+.content(...)
+AdminCommentResponseDto 빌더의 content 필드에 값을 채우는 메서드
+
+comment.getContent()
+Comment 엔티티에서 content(댓글 내용)을 꺼내오는 메서드
+
+->
+Comment 객체 안의 댓글 내용을 꺼내서, AdminCommentResponseDto 의 content 필드에 넣는다   는 뜻입니다.

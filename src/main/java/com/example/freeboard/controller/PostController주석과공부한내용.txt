@@ -265,3 +265,31 @@ createdPost
 
 @RequestBody
 클라이언트가 보낸 HTTP 요청의 Body(JSON 형식 데이터)를 자바 객체로 변환해서 매개변수에 바인딩해줌
+
+
+
+
+ResponseEntity<Void> 반환
+응답 본문(body)은 없고(Void), HTTP 상태 코드만 반환하겠다는 의미입니다.
+보통 삭제 요청은 204 No Content 같은 상태 코드로 응답합니다.
+
+
+return ResponseEntity.noContent().build();
+
+ResponseEntity.noContent()
+HTTP 상태 코드 204 No Content 를 의미합니다.
+즉, 요청은 성공했지만 응답 본문(body)은 비워둔다 는 뜻입니다.
+삭제 요청 (DELETE) 같은 경우 주로 사용됩니다.
+
+
+.build()
+ResponseEntity 객체를 실제로 생성합니다.
+
+정리하면
+게시글 삭제가 정상적으로 완료되었고, 클라이언트에게 204 No Content 상태 코드만 응답한다
+
+즉,
+deletePost 메서드 전체는
+
+요청받은 게시글을 삭제하고
+클라이언트에 빈 응답(본문 없음) + 204 상태 코드 를 반환하는 API 입니다.
