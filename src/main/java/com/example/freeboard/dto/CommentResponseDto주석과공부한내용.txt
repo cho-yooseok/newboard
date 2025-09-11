@@ -1,0 +1,100 @@
+해설
+1. CommentResponseDto 클래스의 역할
+클라이언트(프론트엔드)에게 댓글 데이터를 응답할 때 사용하는 DTO
+엔티티(Comment)에서 필요한 데이터만 뽑아내어 전달.
+
+2. Lombok 어노테이션
+@Getter, @Setter -> getter/setter 자동 생성
+@NoArgsConstructor -> 기본 생성자 생성
+@AllArgsConstructor -> 모든 필드를 받는 생성자 생성
+
+3. 생성자 오버로딩
+첫 번째 생성자: 좋아요 수 (likeCount)를 서비스 레이어에서 직접 계산해 넣을 때 사용
+두 번째 생성자: Comment 엔티티 자체의 likeCount 를 가져옴. 만약 null 이면 기본값 0을 넣음
+
+->
+CommentResponseDto는 댓글 ID, 작성자, 작성/수정 시간, 좋아요 수, 좋아요 여부를 포함해
+ 클라이언트에 반환되는 데이터 모델이다
+
+
+
+전체 흐름 정리
+1. DB(Comment 엔티티) -> 댓글 원본 데이터 저장
+2. Service -> DB에서 댓글 조회 후, 엔티티를 CommentResopnseDto 로 변환
+3. Controller -> 변환된 DTO 리스트를 클라이언트(프론트엔드)에 응답
+
+
+
+생성자 오버로딩(Constructor Overloading)이란?
+-> 같은 클래스 안에서 이름은 같지만 매개변수(파라미터)의 개수나 타입이 다른 생성자를 여러 개 정의하는 것을 말한다
+
+즉, 객체를 만들 때 상황에 따라 다른 방식으로 초기화할 수 있게 해줍니다.
+
+정리
+오버로딩(Overloading) = 같은 이름, 다른 매개변수
+생성자 오버로딩 = 객체를 다양한 방식으로 초기화할 수 있도록 여러 생성자를 정의하는 것
+
+@NoArgsConstructor -> 기본 생성자 생성
+@AllArgsConstructor -> 모든 필드를 받는 생성자 생성
+
+
+
+
+주석
+package com.example.freeboard.dto; // DTO 패키지에 속한 클래스
+
+import com.example.freeboard.entity.Comment;    // Comment 엔티티를 불러와 DTO 변환에 사용
+import lombok.AllArgsConstructor;               // 모든 필드를 받는 생성자 자동 생성
+import lombok.Getter;                           // Getter 메서드 자동 생성
+import lombok.NoArgsConstructor                 // 기본 생성자 자동 생성
+import lombok.Setter;                           // Setter 메서드 자동 생성
+
+import java.time.LocalDateTime;                 // 날짜/시간 타입 사용
+
+
+@Getter
+@Setter
+@NoArgsConstructor                              // 매개변수가 없는 기본 생성자 자동 생성
+@AllArgsConstructor                             // 모든 필드를 초기화하는 생성자 자동 생성
+public class CommentResponseDto {   // 댓글 응답 데이터를 담는 DTO
+
+    private Long id;                    // 댓글 ID
+    private String content;             // 댓글 내용
+    private String authorUsername;      // 댓글 작성자 이름
+    private LocalDateTime createdAt;    // 댓글 작성 시간
+    private LocalDateTime updatedAt;    // 댓글 수정 시간
+    private Long likeCount;             // 좋아요 수
+    private boolean likedByCurrentUser; // 현재 로그인한 사용자가 좋아요 눌렀는지 여부
+
+    // 생성자 오버로딩 1: Comment 엔티티 + 좋아요 여부 + 좋아요 수를 직접 전달받아 DTO 생성
+    public CommentResponseDto(Comment comment, boolean likedByCurrentUser, Long likeCount) {
+        this.id = comment.getId();                                      // 엔티티에서 ID 추출
+        this.content = comment.getComment();                            // 엔티티에서 댓글 내용 추출
+        this.authorUsername = comment.getAuthor().getUsername();        // 작성자 이름 추출
+        this.createdAt = comment.getCreatedAt();                        // 작성 시간 추출
+        this.updatedAt = comment.getUpdatedAt();                        // 수정 시간 추출
+        this.likeCount = likeCount;                                     // 파라미터로 전달받은 좋아요 수 저장
+        this.likedByCurrentUser = likedByCurrentUser;                   // 현재 사용자 좋아요 여부 저장
+    }
+
+    // 생성자 오버로딩 2: 좋아요 수를 엔티티에서 가져오고, 없으면 기본값 0으로 설정
+    public CommentResponseDto(Comment comment, boolean likedByCurrentUser) {
+        this.id = comment.getId();                                      // 엔티티에서 ID 추출
+        this.content = comment.getContent();                            // 엔티티에서 댓글 내용 추출
+        this.authorUsername = comment.getAuthor().getUsername();        //  작성자 이름 추출
+        this.createdAt = comment.getCreatedAt();                        // 작성 시간 추출
+        this.updatedAt = comment.getUpdatedAt();                        // 수정 시간 추출
+        this.likeCount = comment.getLikeCount() != null ? comment.getLikeCount() : 0L;      // null 이면 0
+        this.likedByCurrentUser = likedByCurrentUser;                   // 현재 사용자 좋아요 여부 저장
+    }
+}
+
+
+
+
+
+
+
+
+
+==========================================================

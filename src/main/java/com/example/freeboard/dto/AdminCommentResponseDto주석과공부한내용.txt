@@ -127,3 +127,74 @@ Comment 엔티티에서 content(댓글 내용)을 꺼내오는 메서드
 
 ->
 Comment 객체 안의 댓글 내용을 꺼내서, AdminCommentResponseDto 의 content 필드에 넣는다   는 뜻입니다.
+
+
+
+
+.authorUsername(comment.getAuthor() != null ? comment.getAuthor().getUsername() : "탈퇴한 사용자")
+
+.authorUsername(...)
+AdminCommentResponseDto 의 authorUsername 필드에 값을 넣는다
+
+comment.getAuthor() != null ... : ...
+삼항 연산자(조건 연산자)
+
+comment.getAuthor() != null
+댓글 작성자가 존재하면
+
+comment.getAuthor().getUsername()
+작성자의 username 을 가져와서 놓고
+
+: "탈퇴한 사용자"
+작성자가 null 이면 "탈퇴한 사용자" 라는 문자열을 대신 넣는다
+
+즉,
+"댓글 작성자가 있으면 username을 넣고, 없으면 '탈퇴한 사용자'라고 표시한다"  는 의미
+
+
+.postId(comment.getPost() != null ? comment.getPost().getId() : null)
+
+.postId(...)
+AdminCommentResponseDto의 postId 필드에 값을 넣는 메서드
+
+
+comment.getPost() != null ? ... : ...
+상항 연산자
+
+comment.getPost() ! = null
+댓글이 어떤 게시글(Post)에 달려 있다면
+
+comment.getPost().getId()
+그 게시글의 ID를 가져와서 DTO의 postId 에 넣음
+
+: null
+만약 댓글이 어떤 게시글에도 속하지 않으면 null을 넣음
+
+
+.postId(comment.getPost() != null ? comment.getPost().getId() : null)
+->
+댓글이 달린 게시글이 있으면 그 게시글의 ID를 넣고, 없으면 null을 넣는다  는 의미
+
+
+
+.postTitile(comment.getPost() != null ? comment.getPost().getTitle() : "삭제된 게시글")
+
+.postTitile(...)
+AdminCommentResponseDto 의 postTitle 필드에 값을 채움
+
+comment.getPost() != null
+댓글이 속한 게시글(Post)이 존재한다면
+
+comment.getPost().getTitle()
+해당 게시글의 제목을 가져와서 DTO 에 넣음
+
+: "삭제된 게시글"
+만약 댓글이 속한 게시글이 삭제되었거나 null 이라면 "삭제된 게시글"이라는 문자열을 대신 넣음
+
+
+
+.build();
+
+.build()
+지금까지 builder() 체인으로 설정한 값들을 모두 모아서 최종적으로 AdminCommentResponseDto 객체를 생성하는 메서드
+

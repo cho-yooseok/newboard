@@ -1,0 +1,59 @@
+AuthRequest 는 로그인할 때 클라이언트가 보내는 요청 DTO
+username -> 사용자 아이디(로그인 ID)
+password -> 사용자 비밀번호
+
+@NotBlank 는
+Bean Validation 기능으로, 값이 비어 있으면 컨트롤러 진입 전에 검증 에러를 발생시킨
+
+@Getter,
+@Setter
+는 Lombok이 자동으로    getUsername(),   setUsername(),    getPassword(),    setPassword()
+메서드를 생성해줌
+
+
+
+
+
+주석
+
+package com.example.freeboard.dto;
+
+import jakarta.validation.constrains.NotBlank;
+// jakarta.validation 의 @NotBlank 어노테이션 사용 -> 필수 입력값 검증
+
+import lombok.Getter;
+import lombok.Setter;
+// Lombok 라이브러리의 어노테이션
+// @Getter -> 모든 필드의 Getter 메서드 자동생성
+// @Setter -> 모든 필드의 Setter 메서드 자동생성
+
+@Getter
+@Setter
+public class AuthRequest {
+    // 로그인 요청을 담는 DTO(Data Transfer Object)
+
+    @NotBlank(message = "사용자 이름은 필수입니다.")
+    // username 필드는 null, 빈 문자열, 공백만 있는 문자열을 허용하지 않음
+    // 검증 실패 시 "사용자 이름은 필수입니다." 라는 메시지 반환
+    private String username;
+
+    @NotBlank(message = "비밀번호는 필수입니다.")
+    // password 필드도 반드시 값이 있어야 함
+    // 검증 실패 시 "비밀번호는 필수입니다." 라는 메시지 반환
+    private String password;
+}
+
+
+
+constrains
+constrain 의 단수 현재형
+억제하다, 강요하다, 제한하다
+
+
+The new law constrains companies from polluting
+새 법은 기업들이 오염시키는 것을 제한한다
+
+Fear constrains him from speaking out
+두려움 때문에 그는 말하는 것을 억제당한다.
+
+

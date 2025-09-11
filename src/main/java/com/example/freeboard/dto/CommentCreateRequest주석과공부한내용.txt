@@ -1,0 +1,36 @@
+해설
+CommentCreateRequest 클래스는
+클라이언트가 댓글을 작성할 때 요청으로 보내는 데이터를 담는 DTO(Data Transfer Object)
+
+유효성 검증(Validation)
+ @NotBlank
+ 댓글 내용은 비워둘 수 없음
+
+ @Size(max=1000)
+ 댓글은 최대 1000자 까지만 입력 가능
+
+
+Lombok의 @Getter, @Setter
+:
+getContent(), setContent(String content) 메서드를 자동으로 생성해줌 -> 코드 간결화
+
+이 클래스의 역할
+사용자가 댓글을 작성할 때 서버에 전달되는 요청 데이터를 검증하고 담는 그릇
+
+
+
+주석
+package com.example.freeboard.dto; // 패키지 경로 정의 (dto 폴더에 속한 클래스)
+
+import jakarta.validation.constraints.NotBlank;     // 값이 비어 있으면 안 되도록 검증하는 어노테이션
+import jakarta.validation.constraints.Size;         // 문자열 길이 제한 검증 어노테이션
+import lombok.Getter;                               // Lombok이 getter 메서드 자동 생성
+import lombok.Setter;                               // Lombok이 setter 메서드 자동 생성
+
+@Getter // getContent() 자동 생성
+@Setter // setContent() 자동 생성
+public class CommentCreateRequest { // 댓글 생성 요청을 담는 DTO 클래스
+
+    @NotBlank(message = "댓글 내용은 필수입니다.") // 내용이 공백이거나 null 이면 검증 에러 발생
+    @Size(max = 1000, message = "댓글 내용은 최대 1000자까지 가능합니다.") // 최대 1000자 제한
+    private String content; // 댓글 본문
