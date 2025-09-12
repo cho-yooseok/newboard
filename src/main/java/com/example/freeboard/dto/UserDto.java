@@ -1,8 +1,7 @@
 // C:\Users\admin\Desktop\freeboard\freeboard\src\main\java\com\example\freeboard\dto\UserDto.java
 package com.example.freeboard.dto;
 
-import com.example.freeboard.entity.User; // User 엔티티 임포트
-import com.example.freeboard.entity.UserRole; // UserRole 임포트 (필요 없어지지만, 혹시 다른 곳에서 명시적으로 쓰일까 봐 일단 유지)
+import com.example.freeboard.entity.User;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

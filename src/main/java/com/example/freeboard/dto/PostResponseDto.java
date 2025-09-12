@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@Builder // 빌더 패턴을 사용하기 위해 @Builder 어노테이션 추가
+@Builder
 public class PostResponseDto {
     private Long id;
     private String title;
@@ -21,7 +21,7 @@ public class PostResponseDto {
     private Long likeCount;
     private boolean likedByCurrentUser;
     private Long commentCount;
-    private boolean deleted; // **관리자 페이지를 위해 삭제 상태 필드 추가**
+    private boolean deleted;
 
     // Post 엔티티를 DTO로 변환하는 정적 메서드 (관리자용 - 모든 필드 포함)
     public static PostResponseDto fromEntityForAdmin(Post post, Long likeCount, Long commentCount) {
