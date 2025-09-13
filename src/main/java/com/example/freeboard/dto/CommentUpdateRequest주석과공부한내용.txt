@@ -1,0 +1,33 @@
+주석
+
+package com.example.freeboard.dto;
+// 패키지 경로 -> DTO(Data Transfer Object)를 모아두는 위치
+
+import jakarta.validation.constraints.NotBlank;
+// jakarta.validation: 값 검증용 어노테이션
+// @NotBlank -> null, "", " " (공백만) 다 허용하지 않음
+
+import jakarta.validation.constraints.Size;
+// @Size -> 문자열의 길이 제한 검증에 사용
+
+import lombok.Getter;
+import lombok.Setter;
+// Lombok 라이브러리 -> Getter/Setter 자동 생성
+
+@Getter // getContent() 메서드 자동 생성
+@Setter // setContent(String content) 메서드 자동 생성
+public class CommentUpdateRequest {
+
+    @NotBlank(message = "댓글 내용은 필수입니다.")
+    // content 값이 null, 빈 문자열, 공백일 경우 검증 에러 발생
+
+    @Size(max = 1000, message = "댓글 내용은 최대 1000자까지 가능합니다.")
+    // content 길이가 1000자를 넘으면 검증 에러 발생
+
+    private String content; // 수정할 댓글 내용
+}
+
+
+해설
+CommentUpdateRequest
+댓글을 수정할 때 클라이언트(프론트엔드)에서 서버로 보내는 요청 DTO

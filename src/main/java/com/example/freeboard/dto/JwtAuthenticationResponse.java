@@ -12,5 +12,5 @@ public class JwtAuthenticationResponse {
     private String accessToken;
     private String tokenType = "Bearer";
     private String username;
-    private String role; // <-- 역할(Role) 필드 추가
+    private String role;
 }

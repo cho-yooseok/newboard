@@ -1,0 +1,46 @@
+주석
+
+package com.example.freeboard.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JwtAuthenticationResponse {
+
+    private String accessToken;
+    // 실제 토큰 문자열 (예 : "eyjhGcifdfdsfdfsf...")
+
+    private String tokenType = "Bearer";
+    // 토큰 타입. 보통 Authorization 헤더에 "Bearer <token>" 형태로 넣기 위해 "Bearer" 사용
+    // 필드 선언 시 기본값을 지정해주면 no-arg 생성자로 생성했을 때 기본값이 설정됨.
+
+    private String username;
+    // 인증된 사용자의 유저네임 (또는 식별자)
+
+    private String role;
+    // 사용자의 권한(역할)   예: "ROLE_USER", "ROLE_ADMIN"
+}
+
+
+
+
+해설
+@Data
+->
+Lombok이 getter, setter, toString(), equals(), hashCode() 등을 자동으로 만들어 줍니다.
+DTO에서 자주 사용됩니다.
+
+
+@NoArgsConstructor
+->
+매개변수 없는 기본 생성자 public JwtAuthenticationResponse() 를 생성합니다.
+
+
+@AllArgsConstructor
+->
+모든 필드를 매개변수로 받는 생성자
+public JwtAuthenticationResponse(String accessToken, String tokenType, String username, Stirng role)

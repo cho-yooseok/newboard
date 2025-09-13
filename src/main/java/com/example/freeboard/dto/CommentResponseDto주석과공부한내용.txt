@@ -371,5 +371,43 @@ public class User {
 public class Main {
     public static void main(String[] args) {
         // 생성자에서 username 만 넣음 (필수값)
+        User user = new User("철수");
+
+        // 나머지 필드(email, age)는 setter로 나중에 설정 가능
+        user.setEmail("chulsoo@test.com");
+        user.setAge(20);
+
+        System.out.println(user.getUsername());     // 철수
+        System.out.println(user.getEmail());        // chulsoo@test.com
+        System.out.println(user.getAge());          // 20
     }
 }
+
+
+정리
+final 또는 @NonNull 필드는 @RequiredArgsConstructor 생성자로 반드시 넣어야 함
+final 이 아닌 필드는 setter 메서드를 이용해 객체 생성 후 나중에 값 설정 가능
+
+즉 "필수값은 생성자에서 보장" + "선택값은 setter로 나중에 변경"이라는 유연한 방식을 만들 수 있다.
+
+
+
+프록시
+
+1. 프록시(Proxy)
+대리인, 가짜 객체라고 생각하면 된다.
+JPA는 엔티티를 가져올 때 바로 DB에서 모든 값을 가져오지 않고, 대신 껍데기 객체(프록시)를 먼저 만들어 둡니다.
+
+왜? 성능때문입니다!
+
+예를 들어 @ManyToOne  같은 연관관계에서 항상 모든 데이터를 가져오면 너무 무겁기 때문에
+필요할 때만 실제 DB조회를 하기 위해 프록시를 씁니다.
+
+
+비유하자면
+프록시 = "대리인"
+네가 어떤 친구를 만나러 갔는데, 그 친구가 아직 안 와서 대신 친구 동생이 "형 곧 올거야" 라고 말해주는 느낌
+나중에 진짜 친구가 오면 그제서야 실제 데이터를 가져오는 것 = 지연 로딩(Lazy Loading)
+
+
+
