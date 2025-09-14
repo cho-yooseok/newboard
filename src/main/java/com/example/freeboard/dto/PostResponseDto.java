@@ -35,8 +35,8 @@ public class PostResponseDto {
                 .viewCount(post.getViewCount())
                 .likeCount(likeCount)
                 .commentCount(commentCount)
-                .deleted(post.isDeleted()) // 삭제 상태 포함
-                .likedByCurrentUser(false) // 관리자 목록에서는 이 값이 중요하지 않음
+                .deleted(post.isDeleted())
+                .likedByCurrentUser(false)
                 .build();
     }
 }

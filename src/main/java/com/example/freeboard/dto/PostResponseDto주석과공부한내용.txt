@@ -1,0 +1,138 @@
+package com.example.freeboard.dto;
+
+import com.example.freeboard.entity.Post;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Getter // Lombok: 각 필드에 대한 getter 메서드를 자동 생성
+@Setter // Lombok: 각 필드에 대한 setter 메서드를 자동 생성
+@Builder // Lombok: Builder 패턴을 자동 생성하여 객체 생성 시 가독성과 유지보수성을 높임
+public class PostResponseDto {
+    // 게시글 응답 DTO: 클라이언트에게 반환할 게시글 데이터 구조 정의
+
+    private Long id;                  // 게시글 고유 ID
+    private String title;             // 게시글 제목
+    private String content;           // 게시글 내용
+    private String authorUsername;    // 작성자 이름 (username)
+    private LocalDateTime createdAt;  // 생성 시간
+    private LocalDateTime updatedAt;  // 수정 시간
+    private Integer viewCount;        // 조회수
+    private Long likeCount;           // 좋아요 수
+    private boolean likedByCurrentUser; // 현재 로그인한 사용자가 이 글을 좋아요 했는지 여부
+    private Long commentCount;        // 댓글 개수
+    private boolean deleted;          // 삭제 여부 (soft delete 처리 여부)
+
+    /**
+    Post 엔티티를 관리자(Admin)용 응답 DTO로 변환하는 정적 메서드
+    관리자 페이지에서는 모든 필드(삭제 여부 포함)를 확인할 수 있음
+    likedByCurrentUser 값은 관리자 화면에서는 의미 없으므로 항상 false로 설정
+
+    @param post 변환할 Post엔티티
+    @param likeCount 해당 게시글의 좋아요 수
+    @param commentCount 해당 게시글의 댓글 수
+    @return PostResponseDto (관리자 전용 변환 결과)
+    **/
+    public static PostResponseDto fromEntityForAdmin(Post post, Long likeCount, Long commentCount) {
+        return PostResponseDto.builder()
+                .id(post.getId())                   // 엔티티의 ID 가져오기
+                .title(post.getTitle())             // 게시글 제목
+                .content(post.getContent())         // 게시글 내용
+
+                .authorUsername(post.getAuthor() != null ? post.getAuthor().getUsername() : "탈퇴한 사용자")
+
+                .createdAt(post.getCreatedAt())     // 생성 시간
+                .updatedAt(post.getUpdatedAt())     // 수정 시간
+                .viewCount(post.getViewCount())     // 조회수
+                .likeCount(likeCount)               // 좋아요 수
+                .commentCount(commentCount)         // 댓글 수
+                .deleted(post.isDeleted())          // 삭제 여부 포함
+                .likedByCurrentUser(false)          // 관리자 화면에서는 중요하지 않으므로 기본값 false
+                .build();                           // Build();  패턴으로 객체 생성
+        }
+    }
+
+
+핵심 해설
+1. DTO(Data Transfer Object)
+엔티티(Post)와 직접 노출되는 데이터를 분리하여, API 응답시 불필요하거나 민감한 정보를 감출 수 있음
+여기서는 PostResponseDto 가 클라이언트(프론트엔드)로 전달되는 데이터 모델
+
+2. fromEntityForAdmin 메서드
+관리자(Admin) 전용 변환 메서드 -> 삭제 여부(deleted) 같은 일반 사용자에게는 노출하지 않을 정보까지 포함
+작성자가 탈퇴했을 경우 null 예외 방지를 위해 "탈퇴한 사용자"라는 문자열을 넣어줌
+관리자는 특정 게시글이 삭제 상태인지 확인해야 하므로 deleted 값을 그대로 포함
+좋아요 여부(likedByCurrentUser)는 관리자의 입장에서는 의미가 없으므로 false 고정
+
+3. Builder 패턴 사용 이유
+DTO 필드가 많을 때 생성자 대신 Builder를 쓰면 가독성이 좋아지고 유지보수가 용이함
+필요 없는 필드만 빼고 선택적으로 값 세팅 가능
+
+
+
+public static PostResponseDto fromEntityForAdmin(Post post, Long likeCount, Long commentCount) {
+
+}
+
+public
+접근 제어자 -> 어디서든 접근할 수 있는 공개 메서드임을 의미합니다
+이 메서드는 다른 패키지나 서비스 클래스에서도 호출할 수 있습니다.
+
+static
+정적 메서드로 선언 -> 객체(PostResponseDto)를 생성하지 않아도 클래스 이름으로 직접 호출할 수 있습니다
+
+예:
+PostResponseDto dto = PostResponseDto.fromEntityForAdmin(post, 10L, 5L);
+
+
+PostResponseDto
+메서드의 리턴타입(return type)
+이 메서드는 실행 결과로 PostResponseDto 객체를 만들어 반환합니다
+
+fromEntityForAdmin
+메서드 이름 -> 직관적으로 Post 엔티티를 Admin 전용 DTO로 변환한다는 의미를 담고 있음
+
+매개변수(parameters)
+(Post post, Long likeCount, Long commentCount)
+메서드가 실행되기 위해 외부에서 전달받아야 하는 값들
+Post post -> 변환 대상이 되는 게시글 엔티티 객체
+Long likeCount -> 게시글의 좋아요 수(DB에서 집계된 값)
+Long commentCount -> 게시글의 댓글 수 (DB에서 집계된 값)
+
+
+정리하면
+이 메서드는 게시글 엔티티(Post) + 좋아요 수 + 댓글 수 를 받아서  -> 관리자(Admin) 화면에서 쓸 수 있는
+DTO(PostResponseDto) 로 변환해주는 정적 팩토리 메서드입니다.
+
+
+
+정적 메서드로 선언 -> 객체(PostResponseDto)를 생성하지 않아도 클래스 이름으로 직접 호출할 수 있습니다.
+의 의미란?
+
+일반 메서드
+보통 메서드는 객체를 먼저 만들어야 호출할 수 있습니다.
+
+예시
+PostResponseDto dto = new PostResponseDto();        // 객체 생성
+dto.someMethod();                                   // 객체를 통해서만 메서드 호출 가능
+
+즉, new 로 인스턴스를 만든 뒤에야 메서드를 쓸 수 있다.
+
+정적 메서드 (static)
+static을 붙이면 객체를 만들지 않아도 클래스 이름으로 바로 호출할 수 있습니다.
+
+예시
+
+// 객체 안 만들어도 됨
+PostResponseDto dto = PostResponseDto.fromEntityForAdmin(post, 10L, 5L);
+
+여기서는 fromEntityForAdmin이 정적 메서드라서 new PostResponseDto() 같은 과정 없이,
+그냥 클래스 이름(PostResponseDto)을 통해 바로 호출할 수 있습니다.
+
+즉
+->
+static 메서드는 클래스 자체가 공용 도구 처럼 제공하는 기능이고,
+일반 메서드는 내가 직접 객체를 만들어야만 쓸 수 있는 기능입니다.
+

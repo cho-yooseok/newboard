@@ -43,4 +43,14 @@ DTO에서 자주 사용됩니다.
 @AllArgsConstructor
 ->
 모든 필드를 매개변수로 받는 생성자
-public JwtAuthenticationResponse(String accessToken, String tokenType, String username, Stirng role)
+public JwtAuthenticationResponse(String accessToken, String tokenType, String username, Stirng role) 를 생성합니다
+
+private String tokenType = "Bearer";
+->
+기본값을 "Bearer"로 설정해 두었기 때문에 new JwtAuthenticationResponse()로 만들면 tokenType 은 "Bearer" 가 됩니다
+그러나 @AllArgsConstructor  로 생성할 때는 생성자 인자로 전달되는 값이 우선 적용됩니다. \
+(즉 생성자에서 null 이나 다른 값을 넣으면 기본값이 덮어써집니다)
+
+private String username; / private String role;
+-> 응답에 포함시켜 클라이언트가 현재 사용자의 식별자나 권한을 알 수 있게 합니다
+
