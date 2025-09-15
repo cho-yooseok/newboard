@@ -136,3 +136,108 @@ PostResponseDto dto = PostResponseDto.fromEntityForAdmin(post, 10L, 5L);
 static 메서드는 클래스 자체가 공용 도구 처럼 제공하는 기능이고,
 일반 메서드는 내가 직접 객체를 만들어야만 쓸 수 있는 기능입니다.
 
+
+
+
+
+정적 메서드 (static) 과 일반 메서드 (non-static) 비교
+
+public class Calculator {
+
+    // 정적 메서드 (static)
+    public static int add(int a, int b) {
+        return a + b;
+    }
+
+    // 일반 메서드 (non-static)
+    public int multiply(int a, int b) {
+        return a * b;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // [1] 정적 메서드 호출 -> 객체 생성 불필요
+        int sum = Claculator.add(3, 5);     // 바로 클래스 이름으로 호출
+        System.out.println("3 + 5 = " + sum);
+
+        // [2] 일반 메서드 호출 -> 반드시 객체 생성 필요
+        Caculator calc = new Calculator();      // 객체 생성
+        int product = calc.multiply(3, 5);      // 객체를 통해 호출
+        System.out.println("3 * 5 = " + product);
+    }
+}
+
+실행 결과
+3 + 5 = 8
+3 * 5 = 15
+
+
+차이 정리
+1. 정적 메서드 (static)
+클래스 이름으로 바로 호출 가능 (Caluculator.add(3,5))
+공용 도구 처럼 사용할 때 적합
+예 : Math.max(), Integer.parseInt()
+
+2. 일반 메서드
+반드시 new로 객체를 만든 후 호출해야 함 (calc.multiply(3,5))
+객체의 상태(필드 값)를 활용할 때 사용
+
+
+
+1. static일 때
+
+@Service
+public class PostService {
+
+    private final PostRepository postRepository;
+
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    // 관리자용 게시글 조회
+    public PostResponseDto getPostForAdmin(Long postId) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        Long likeCount = post.getLikes().stream().count();
+        Long commentCount = post.getComments().stream().count();
+
+        // static 메서드라서 바로 클래스 이름으로 호출 가능
+        return PostResponseDto.fromEntityForAdmin(post, likeCount, commentCount);
+    }
+}
+
+서비스 코드가 깔끔하다
+그냥 PostResponseDto.fromEntityForAdmin(...) 한 줄이면 변환 끝이다
+
+
+
+2. static이 아닐때 (인스턴스 메서드라면)
+
+@Service
+public class PostService {
+
+    private final PostRepository postRepository;
+
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    // 관리자용 게시글 조회
+    public PostResponseDto getPostForAdmin(Long postId) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        Long likeCount = post.getLikes().stream().count();
+        Long commentCount = post.getComments().stream().count();
+
+        // 반드시 객체를 생성해야만 호출하능
+        PostResponseDto helper = new PostResponseDto();
+        return helper.fromEntityForAdmin(post, likeCount, commentCount);
+    }
+}
+
+불필요하게 new PostResponseDto() 객체를 만들어야 한다
+사실 이 객체는 변환과정에서 전혀 쓰이지 않는데도, 형식적으로 만들어야만 메서드 호출 가능하다

@@ -1,0 +1,53 @@
+package com.exampel.freeboard.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+게시글 수정 요청을 받을 때 사용하는 DTO(Data Transfer Object) 클래스입니다
+사용자가 게시글 수정 API를 호출할 때 전달하는 데이터(title, content)를 담습니다.
+유효성 검증(validation)을 적용하여 잘못된 데이터 입력을 방지합니다.
+**/
+@Getter // Lombok: getter 메서드 자동생성
+@Setter // Lombok: setter 메서드 자동생성
+public class PostUpdateRequest {
+
+    /**
+    게시글 제목
+    @NotBlank : null, 빈 문자열(""), 공백("")을 허용하지 않음 (즉, 반드시 값이 있어야 함)
+    @Size(max = 255) : 제목의 최대 길이를 255자로 제한
+    (DB에서 VARCHAR(255) 컬럼과 매핑되는 경우에 맞춰 설정)
+    **/
+    @NotBlank(message = "제목은 필수입니다.")
+    @Size(max = 255, message = "제목은 최대 255자까지 가능합니다.")
+    private String title;
+
+    /**
+    게시글 내용
+    @NotBlank : 내용이 반드시 입력되어야 함
+    @Size(max = 65535) : 내용의 길이를 최대 65535자로 제한
+    (DB에서 TEXT 타입 컬럼의 크기에 맞춰 설정)
+    **/
+    @NotBlank(message = "내용은 필수입니다")
+    @Size(max = 65535, message = "내용은 최대 65535자까지 가능합니다")  // TEXT 타입에 맞춰 적절히 조절
+    private String content;
+}
+
+
+추가 해설
+1. DTO의 역할
+PostUpdateRequest 는 Controller -> Service 계층으로 데이터를 전달하기 위한 객체입니다
+클라이언트(프론트엔드)가 게시글 수정 요청을 보낼 때 JSON 데이터를 이 DTO 로 받아 사용합니다.
+
+2. 유효성 검증(Validation)
+@NotBlank -> 값이 비어있거나 공백만 있는 경우 에러 발생
+@Size(max = ...) -> 문자열의 최대 길이 제한. DB컬럼 크기와 일치하도록 설정하는 것이 일반적입니다
+
+3. Lombok 사용
+@Getter, @Setter -> 매번 getTitle(), setTitle(...) 같은 메서드를 작성할 필요 없이 자동으로 생성해 줍니다.
+
+정리
+이 클래스는 사용자가 게시글을 수정할 때 반드시 제목과 내용을 채워서 보내도록 강제하고,
+데이터베이스에 맞는 길이 제한을 걸어주는 DTO 입니다
