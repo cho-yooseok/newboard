@@ -1,0 +1,41 @@
+package com.example.freeboard.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+회원 가입 요청을 처리하기 위한 DTO(Data Tranfer Object) 클래스입니다
+사용자가 회원 가입을 시도할 때 입력하는 값(username, password)을 담습니다.
+유효성 검증(validation)을 통해 잘못된 데이터 입력을 방지합니다
+
+@Getter // Lombok: username, password 에 대한 getter 자동 생성
+@Setter // Lombok: username, password 에 대한 setter 자동 생성
+public class RegisterRequest {
+
+    /**
+    사용자 이름(username)
+    @NotBlank: null, 빈 문자열(""), 공백("  ")을 허용하지 않음
+    @Size(min = 2, max = 20, message = "사용자 이름은 2자 이상 20자 이하여야 합니다.")
+    private String username;
+
+    /**
+    비밀번호(password)
+    @NotBlank : 반드시 입력해야 함
+    @Size(min=2) : 최소 2자 이상이어야 함
+    **/
+    @NotBlank(message = "비밀번호는 필수입니다.")
+    @Size(min = 2, message = "비밀번호는 2자 이상이어야 합니다.")
+    private String password;
+    }
+
+
+
+
+추가 해설
+1. DTO 역할
+RegisterRequest는 클라이언트 -> 서버  로 회원 가입 데이터를 전달하는 역할을 합니다
+Controller 에서 @RequestBody RegisterRequest request 형태로 받아 사용합니다
+
+
