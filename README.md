@@ -112,3 +112,35 @@
       // 4. 마지막으로 사용자 삭제
       userRepository.delete(user);
   }
+##
+##
+##  실제 실행 스크린 샷
+![1첫화면.png](src/main/resources/image/1%EC%B2%AB%ED%99%94%EB%A9%B4.png)
+
+![2회원가입.png](src/main/resources/image/2%ED%9A%8C%EC%9B%90%EA%B0%80%EC%9E%85.png)
+
+![3회원가입 후.png](src/main/resources/image/3%ED%9A%8C%EC%9B%90%EA%B0%80%EC%9E%85%20%ED%9B%84.png)
+
+![4로그인 성공.png](src/main/resources/image/4%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EC%84%B1%EA%B3%B5.png)
+
+![5로그인 후 메인.png](src/main/resources/image/5%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%ED%9B%84%20%EB%A9%94%EC%9D%B8.png)
+
+![6새글작성.png](src/main/resources/image/6%EC%83%88%EA%B8%80%EC%9E%91%EC%84%B1.png)
+
+![7댓글이있는 게시글.png](src/main/resources/image/7%EB%8C%93%EA%B8%80%EC%9D%B4%EC%9E%88%EB%8A%94%20%EA%B2%8C%EC%8B%9C%EA%B8%80.png)
+
+![8댓글작성.png](src/main/resources/image/8%EB%8C%93%EA%B8%80%EC%9E%91%EC%84%B1.png)
+
+![9댓글수정.png](src/main/resources/image/9%EB%8C%93%EA%B8%80%EC%88%98%EC%A0%95.png)
+
+![10 관리자 메인.png](src/main/resources/image/10%20%EA%B4%80%EB%A6%AC%EC%9E%90%20%EB%A9%94%EC%9D%B8.png)
+
+![11 관리자 페이지.png](src/main/resources/image/11%20%EA%B4%80%EB%A6%AC%EC%9E%90%20%ED%8E%98%EC%9D%B4%EC%A7%80.png)
+
+![12 관리자 게시글 관리.png](src/main/resources/image/12%20%EA%B4%80%EB%A6%AC%EC%9E%90%20%EA%B2%8C%EC%8B%9C%EA%B8%80%20%EA%B4%80%EB%A6%AC.png)
+
+![13 관리자 댓글.png](src/main/resources/image/13%20%EA%B4%80%EB%A6%AC%EC%9E%90%20%EB%8C%93%EA%B8%80.png)
+
+
+
+
