@@ -1,0 +1,142 @@
+주석
+package com.example.freeboard.entity;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructoer;
+import org.hibernate.annotation.OnDelete;        // JPA에서 지원하지 않는 DB레벨의 삭제 동작을 제어하기 위해 Hibernate 제공
+import org.hibernate.annotations.OnDeleteAction; // OnDelete 에서 사용되는 삭제 옵션 (CASCADE 등)
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity     // JPA 엔티티임을 명시 -> 테이블과 매핑됨
+@Getter     // Lombok: 모든 필드에 대해 Getter 자동 생성
+@Setter     // Lombok: 모든 필드에 대해 Setter 자동 생성
+@NoArgsConstructor // Lombok: 기본 생성자 자동 생성
+@AllArgsConstructor // Lombok: 모든 필드를 매개변수로 받는 생성자 자동 생성
+public class Comment {
+    @Id // 기본 키 (PK)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // 기본 키 자동 증가 전략 (DB의 auto_increment 사용)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    // 다대일 관계: 여러 댓글(Comment)이 하나의 게시글(Post)에 속할 수 있음
+    @JoinColumn(name = "post_id", nullable = false)
+    // FK 컬럼명: post_id, null 허용 x
+    @JsonBackReference
+    // 순환 참조 방지 (Post -> Comment -> Post 반복 구조 방지)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    // DB 레벨에서 게시글(Post) 삭제 시 해당 게시글의 댓글도 함께 삭제
+    private User author;
+
+    @Column(nullable = false)
+    // 생성일시는 null 불가
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;    // 수정일시는 null 허용 (처음엔 없을 수 있음)
+
+    private Integer likeCount = 0;
+    // 좋아요 수 (기본값 0)
+
+    @OneToMany(mappedBy = "commnet", cascade = CascadeType.ALL, orphanRemoval = true)
+    // CommentLike 엔티티와 1:N 관계
+    // mappedBy = "comment" -> CommentLike 엔티티의 comment 필드가 FK 소유
+    // cascade = CascadeType.ALL -> 댓글 삭제 시 연결된 좋아요(CommentLike)도 자동 삭제
+    // orphanRemoval = true -> 관계 끊어진 좋아요 엔티티도 DB에서 삭제
+    private Set<CommentLike> likes = new HashSet<>();
+
+    @PrePersist
+    // 엔티티가 DB에 처음 저장되기 전 실행되는 콜백 메서드
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        // 저장 시 자동으로 현재 시간을 생성일시로 기록
+    }
+
+    @PreUpdate
+    // 엔티티가 업데이트되기 전 실행되는 콜백 메서드
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+        // 수정할 때 자동으로 현재 시간을 수정일시로 기록
+    }
+}
+
+
+
+추가 해설
+1. 관계 매핑
+@ManyToOne :
+댓글은 하나의 게시글(Post)와 하나의 사용자(User)에 속한자
+@OneToMany :
+댓글은 여러 개의 좋아요(CommentLike)를 가질 수 있다.
+
+2. 삭제 연관 동작
+@OnDelete(action = OnDeleteAction.CASCADE) :
+DB레벨에서 게시글/사용자가 삭제되면 관련 댓글도 자동 삭제된다.
+(Hibernate 전용 기능)
+
+3. JSON 순환 참조 방지
+@JsonBackReference
+Post <-> comment 간 양방향 참조 시 무한 루프 방지
+(Post에서 Comment는 직렬화하지만, Comment에서 Post는 직렬화하지 않는다)
+
+4. 자동 시간 기록
+@PrePersist: 최초 저장 시 createdAt 자동 기록
+@PreUpdate: 수정 시 updatedAt 자동 갱신
+
+5. 좋아요 수 관리
+likeCount는 성능 최적화를 위해 카운트 필드로 유지
+likes 는 실제 좋아요 엔티티(CommentLike)와의 관계를 관리
+
+
+
+@ManyToOne(fetch = FetchType.LAZY)
+
+는 JPA 엔티티 연관관계 설정에서 쓰이는 어노테이션입니다
+
+1. @ManyToOne
+N:1 관계를 의미합니다
+댓글(Comment) -> 게시글(Post)은 여러 댓글이 하나의 게시글에 속함
+댓글(Comment) -> 사용자(User) 도 여러 댓글을 한 사용자가 작성함
+
+즉,
+Comment 입장에서는 Post, User 는 부모   이고,   Comment 가 외래 키(FK)를 가집니다.
+
+
+2. fetch = FetchType.LAZY
+지연 로딩(Lazy Loading) 전략을 의미합니다.
+JPA 기본값은 @ManyToOne 관계에서 EAGER(즉시 로딩) 인데, 성능 최적화를 위해
+LAZY로 바꿔 주는 경우가 있습니다.
+
+
+동작 차이
+EAGER (즉시 로딩)
+댓글을 DB에서 조회할 때, 관련된 Post나 User 도 함께 즉시 가져옵니다
+->
+필요 없을 때도 불필요한 조인 발생
+->
+성능 저하
+
+
+LAZY (지연 로딩)
+댓글을 가져올 때는 post_id 또는 user_id 값(FK)만 먼저 가져옴
+->
+실제 Post 객체나 User 객체가 필요할 때 (예: comment.getPost().getTitile())
+그 순간 DB에서 추가 조회 발생
+
+예시
+Comment comment = commentRepository.findById(1L).get();
+
+// 아직 Post는 조회하지 않음 (프록시 객체)
+System.out.println(comment.getId());
+
+// 여기서 Post 데이터 필요 -> DB 쿼리 실행
+System.out.println(comment.getPost().getTitle());
+
+@ManyToOne(fetch = FetchType.LAZY)
+Comment와 Post/ User 간에 N:1 관계를 설정하고,
+관련 엔티티는 필요할 때만 DB에서 조회하도록 지연 로딩 전략을 적용한다는 뜻입니다.
