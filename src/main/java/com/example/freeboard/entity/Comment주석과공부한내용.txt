@@ -140,3 +140,64 @@ System.out.println(comment.getPost().getTitle());
 @ManyToOne(fetch = FetchType.LAZY)
 Comment와 Post/ User 간에 N:1 관계를 설정하고,
 관련 엔티티는 필요할 때만 DB에서 조회하도록 지연 로딩 전략을 적용한다는 뜻입니다.
+
+
+
+@JoinColumn(name = "post_id", nullable = false)
+
+1. @JoinColumn
+JPA에서 외래 키(FK) 컬럼을 매핑할 때 사용하는 어노테이션입니다.
+지금은 Comment -> Post 관계에서 사용되고 있어요.
+즉, 댓글(Comment) 테이블이 post_id 라는 외래 키 컬럼을 가지고 게시글(Post) 테이블과 연결된다는 뜻입니다
+
+2. name = "post_id"
+DB 테이블에 실제로 생성될 외래 키 컬럼 이름을 지정합니다.
+따라서 comment 테이블에는 다음과 같은 컬럼이 생겨요
+
+
+sql
+id              BIGINT(PK)
+post_id         BIGINT(FK)  -> post.id
+user_id         BIGINT(FK)  -> user.id
+content         TEXT
+
+
+3. nullable = false
+이 외래 키 컬럼(post_id)이 NULL이 될 수 없다  는 의미입니다.
+즉, 반드시 댓글은 게시글에 속해야 한다는 규칙을 DB레벨 에서 강제 합니다
+
+만약 nullable = true 였다면
+댓글이 게시글 없이도 저장될 수 있음 -> 논리적으로 맞지 않음
+따라서 댓글은 항상 어떤 게시글에 소속되어야 하므로 false 가 맞습니다
+
+
+정리
+@JoinColumn(name = "post_id", nullable = false)
+comment 테이블에 post_id 라는 외래 키 컬럼을 만들고,
+ 그 값은 반드시 존재해야 하며,
+ post 테이블의 id와 연결된다.
+
+
+
+@JsonBackReference
+@JsonBackReference는 Jackson 라이브러리(JSON 직렬화/역직렬화 라이브러리) 에서 사용하는 어노테이션입니다.
+
+1.문제 상황 : 순환 참조
+엔티티 간에 양방향 관계가 있으면, JSON으로 변환할 때 무한 루프 문제가 생깁니다.
+
+
+예시)
+java
+class Post {
+    List<Comment> comments;
+}
+
+class Comment {
+    Post post;
+}
+
+Post 안에 Comment 리스트 있음
+Comment 안에 다시 Post 있음
+
+이 상태에서 Post -> JSON 직렬화하면?
+Post -> Comment -> 다시 Post -> 또 Comment ... 무한 반복
