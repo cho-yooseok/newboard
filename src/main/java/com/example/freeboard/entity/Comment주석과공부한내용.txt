@@ -201,3 +201,74 @@ Comment 안에 다시 Post 있음
 
 이 상태에서 Post -> JSON 직렬화하면?
 Post -> Comment -> 다시 Post -> 또 Comment ... 무한 반복
+
+
+
+
+
+
+JPA
+cascade = CascadeType.REMOVE 와의 차이
+
+cascade = CascadeType.REMOVE
+JPA 가 엔티티 삭제 시 영속성 컨텍스트를 순회하면서 자식 엔티티를 하나씩 삭제
+(DELETE 쿼리 여러 번 실행)
+애플리케이션 레벨에서 동작
+
+@OnDelete(action = CASCADE)
+DB에서 직접 ON DELETE CASCADE 동작을 실행
+부모 삭제 시 DB가 알아서 자식 레코드를 지워줌
+SQL 쿼리 실행 효율 up  (대량 데이터일 때 성능 차이 큼)
+
+
+현재 코드 예시
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "post_id", nullable = false)
+@JsonBackReference
+@OnDelete(action = OnDeleteAction.CASCADE)
+private Post post;
+
+게시글(Post) 삭제 시, 그 게시글에 달린 댓글(Comment)들이 DB레벨에서 자동으로 같이 삭제됨
+
+
+SQL 관점 예시
+Hibernate가 테이블 생성 시 다음처럼 제약 조건이 붙습니다
+
+sql
+ALTER TABLE comment
+ADD CONSTRAINT fk_post
+FOREIGN KEY (post_id)
+REFERENCES post(id)
+ON DELETE CASCADE;
+
+
+정리
+@OnDelete(action = OnDeleteAction.CASCADE)
+DB에서 부모 삭제 시 자식도 함께 삭제되도록 설정하는 것
+JPA의 CascadeType.REMOVE 와 달리, DB가 직접 처리해서 더 효율적
+
+
+
+@Column(nullable = false, columnDefinition = "TEXT")
+이 필드는 NULL 불가이고, DB에선 TEXT 타입 컬럼으로 생성된다.
+댓글 내용은 반드시 존재해야 하며, 글자 수에 제한 없이 저장 가능하다
+
+
+
+mappedBy = "comment"
+양방향 매핑에서 "주인(Owner)"이 누구인지를 지정합니다
+"comment"는 commentLike 엔티티 안에 있는 필드명을 가리킵니다
+
+
+cascade = CascadeType.ALL
+부모(Comment)에 대한 영속성 작업이 자식(CommentLike)에게도 전파됩니다.
+
+예시:
+commentRespository.save(comment) -> likes 안에 있는 CommentLike 들도 자동 저장
+
+commentRepository.remove(comment) -> 관련된 CommentLike 들도 자동 삭제
+
+
+orphanRemoval = true
+고아 객체 제거 가능
+부모 엔티티와의 관계가 끊어진 자식 엔티티를 자동 삭제합니다
