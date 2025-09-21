@@ -272,3 +272,208 @@ commentRepository.remove(comment) -> 관련된 CommentLike 들도 자동 삭제
 orphanRemoval = true
 고아 객체 제거 가능
 부모 엔티티와의 관계가 끊어진 자식 엔티티를 자동 삭제합니다
+
+java
+comment.getLikes().remove(like);
+like 엔티티는 더 이상 어떤 댓글에도 속하지 않음 -> DB에서 자동 삭제
+
+@OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+private Set<CommentLikes> likes = new HashSet<>();
+
+하나의 댓글에는 여러 개의 좋아요가 있을 수 있다.
+외래 키 (comment_id)는 CommentLike 엔티티에서 관리한다
+댓글 저장/삭제 시 좋아요도 같이 저장/삭제 된다.
+댓글과의 연결이 끊긴 좋아요(고아 엔티티)는 DB에서 자동 삭제된다.
+
+->
+댓글이 부모, 좋아요가 자식. 댓글이 저장/ 삭제되면 좋아요도 같이 처리되고, 댓글과 연결이 끊긴 좋아요는
+자동으로 지워진다.
+
+
+
+private Set<CommentLike> likes
+자료형 Set<CommentLike>
+댓글(Comment)과 연결된 좋아요(CommentLike) 객체들을 담는 컬렉션 필드입니다.
+List 대신 Set을 사용
+-> 중복된 좋아요를 허용하지 않겠다는 의도
+(예: 같은 사용자가 같은 댓글에 여러 번 좋아요 누르는 것을 방지할 수 있음)
+
+
+= new HashSet<>()
+초기화 코드
+JPA에서는 컬렉션을 null로 두지 않고 보통 빈 컬렉션으로 초기화해둡니다
+null이면 NullPointerException 위험
+빈 HashSet 이면 안전하게   .add()    .remove() 가능
+
+
+동작방식(Comment <-> CommentLike 관계)
+@OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemove = true)
+와 연결되어 있기 때문에,
+likes 컬렉션은 해당 댓글에 달린 모든 좋아요 목록을 담습니다
+
+예시 코드
+Comment comment = new Comment();
+CommentLike like1 = new CommentLike(user1, comment);
+CommentLike like2 = new CommentLike(user2, comment);
+
+comment.getLikes().add(like1);
+comment.getLikes().add(like2);
+
+likes 안에는 [like1, like2] 가 들어 있다.
+DB 저장 시 comment_id 외래 키를 통해 comment_like 테이블에 매핑됨
+
+
+
+왜 Set을 쓸까??
+->
+Set은 중복 방지 + 순서 중요하지 않음
+좋아요는 "몇 명이 눌렀는지"만 중요하지, 순서는 중요하지 않음 -> Set 적절함
+만약 "좋아요를 누른 순서" 같은 것이 필요하다면 List를 썼을 것
+
+
+
+
+정리
+private Set<CommentLike> likes = new HashSet<>();
+댓글이 가진 "좋아요"들을 저장하는 컬렉션 필드
+중복을 허용하지 않고, 처음부터 빈 HashSet으로 초기화해서 안전하게 사용
+
+
+
+
+
+@PrePersist
+1.@PrePersist란?
+jpa Entity Lifecycle Callback(생명주기 콜백) 어노테이션 중 하나입니다
+엔티티가 처음 persist()   (즉, DB에 저장) 되기 직전에 자동으로 실행되는 메서드에 붙입니다
+
+2. 현재 코드에서의 의미
+java
+
+@PrePersist
+public void proPersist() {
+    this.createdAt = LocalDateTime.now();
+}
+
+Comment 객체가 처음 저장 되지 직전에 실행됨
+createdAt 필드에 현재 시간을 자동으로 넣어줌
+
+즉, 개발자가 comment.setCreatedAt(...) 하지 않아도, DB 저장할 때 생성 시간이 자동 기록됩니다.
+
+4. 동작예시
+Comment comment = new Comment();
+comment.setContent("좋은 글이네요")
+commentRepository.save(comment);
+
+실제로 save() 할 때
+1.
+jpa가 comment를 저장하기 직전 -> @PrePersist 실행
+2.
+createdAt = LocalDateTime.now() 자동세팅
+3.
+Db에 INSERT 실행
+
+
+정리
+->
+@Prepersist 는 엔티티가 처음 저장되기 직전에 자동 실행되는 콜백으로,
+현재 코드에서는 댓글 작성 시간을 자동으로 기록하는 데 사용된다.
+
+
+
+
+public void prePersist() {
+    this.createdAt = LocalDateTime.now();
+}
+
+public void
+반환값 없음, JPA가 자동으로 호출
+
+prePersist()
+이름은 자유롭게 지을 수 있지만, 보통 의미를 직관적으로 나타냄
+(persist 직전 실행)
+
+{ this.createdAt = LocalDateTime.now(); }
+엔티티 필드 createdAt에 현재 시간 저장
+
+
+2.동작 방식
+Comment 엔티티 객체를 새로 생성
+
+java
+Comment comment = new Comment();
+comment.setContent("좋은 글이에요");
+
+
+commentRepository.save(comment) 호출 -> jpa가 db에 insert 준비
+
+insert 직전에 prePersist() 호출
+
+createdAt 필드가 자동으로 현재 시간 LocalDateTime.now() 으로 세팅
+
+그 값과 함께 DB에 INSERT
+
+개발자가 따로 setCreatedAt() 하지 않아도 자동으로 작성 시간이 기록됨
+
+
+
+예시
+Comment comment = new Comment();
+comment.setContent("안녕하세요!");
+commentRepository.save(comment);
+
+System.out.println(comment.getCreatedAt());
+// -> 2025-09-18T17:00:12.345 (자동으로 현재 시각)
+
+정리
+prePersist() 는 엔티티가 DB에 저장되기 직전에 실행되는 메서드
+여기서는 댓글 작성 시간(createdAt)을 자동으로 기록하도록 함
+수동으로 시간을 설정할 필요 없이, 엔티티 저장 시점이 항상 정확하게 기록됨
+
+
+
+@PreUpdate 란?
+JPA 엔티티 생명주기 콜백(Lifecycle Callback) 어노테이션 중 하나입니다
+엔티티가 DB에서 UPDATE 되기 직전에 자동으로 호출되는 메서드에 붙입니다
+
+
+
+현재 코드에서의 의미
+@PreUpdate
+public void preUpdate() {
+    this.updatedAt = LocalDateTime.now();
+}
+
+Comment 엔티티가 수정되어 DB에 반영되기 직전에 실행됨
+updatedAt 필드에 현재 시간을 자동으로 넣어줌
+즉, 개발자가 따로 comment.setUpdatedAt(...) 하지 않아도, 댓글 수정 시간이 자동으로 기록
+
+
+동작 예시
+Comment comment = commentRepoistory.findById(1L).get();
+comment.setContent("내용 수정!");
+commentRepository.save(comment);
+
+실제로 UPDATE 될 때
+1. JPA가 엔티티 변경 감지(Dirty Checking)
+2. DB에 UPDATE 실행 직전에 preUpdate() 호출
+3. updatedAt = LocalDateTime.now() 세팅
+4. 변경된 값과 함께 DB UPDATE 수행
+
+
+
+
+
+4. @PrePersist 와의 차이
+
+@PrePersist
+엔티티 저장 전
+createdAt
+
+@PreUpdate
+엔티티 수정 전
+updatedAt
+
+보통 둘을 함께 사용
+생성 시간과 수정 시간을 자동 관리 가능
+
