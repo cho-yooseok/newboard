@@ -27,6 +27,6 @@ public class CommentLike {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE) // === 이 줄을 추가합니다 ===
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

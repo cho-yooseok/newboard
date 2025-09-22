@@ -477,3 +477,134 @@ updatedAt
 보통 둘을 함께 사용
 생성 시간과 수정 시간을 자동 관리 가능
 
+
+
+@PreUpdate
+엔티티가 수정되어 DB에 반영되기 직전에 실행되는 콜백
+여기서는 댓글 수정 시간(updatedAt)을 자동으로 기록하도록 함
+
+
+
+
+
+public void preUpdate() {
+    this.updatedAt = LocalDateTime.now();
+}
+
+public void
+반환값 없음, jpa가 자동으로 호출
+
+preUpdate()
+메서드 이름은 자유롭게 지을 수 있지만, 보통 의미를 직관적으로 나타냄(업데이트 직전 실행)
+
+{   this.updatedAt = LocalDateTime.now();   }
+엔티티 필드 updatedAt 에 현재 시간 저장
+
+
+
+동작 방식
+1. DB에서 이미 존재하는 Comment 엔티티 객체를 조회
+
+Comment comment = commentRepository.findById(1L).get();
+
+
+2. 엔티티 필드 수정
+comment.setContent("내용 수정!");
+
+3. jpa가 dirty checking 을 통해 변경 감지
+
+4. DB에 UPDATE SQL 실행 직전에 preUpdate() 호출
+
+5. updatedAt 필드가 자동으로 현재 시간 (LocalDateTime.now())으로 세팅
+
+6. 변경된 값과 함께 DB UPDATE 실행
+
+
+
+예시
+Comment comment = commentRepository.findById(1L).get();
+comment.setContent("좋아요 추가!");
+commentRepository.save(comment);
+
+System.out.println(comment.getUpdatedAt());
+// -> 2025-09-18T17:10:45.123 (자동으로 현재 시각)
+
+
+
+@PrePersist
+실행시점         엔티티 저장 전
+필드 예시        createdAt
+
+
+
+@PreUpdate
+실행 시점           엔티티 수정 전
+필드 예시           updatedAt
+
+
+
+@PrePersist
+생성 시간 자동 기록
+
+@PreUpdate
+수정 시간 자동 기록
+
+
+
+PreUpdate() 메서드
+엔티티가 수정되어 DB에 반영되기 직전에 자동 실행
+updatedAt 필드를 현재 시각으로 자동 업데이트
+개발자가 따로 수정 시간을 설정할 필요 없이 항상 최신 값 유지
+
+
+
+
+
+@OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+private Set<CommentLike> likes = new HashSet<>();
+
+
+@OneToMany(mappedBy = "comment", ...)
+1:N 관계 매핑
+하나의 댓글(Comment)에는 여러 개의 좋아요(CommentLike)가 달릴 수 있음
+mappedBy = "comment" -> 외래 키(FK)는 CommentLike 엔티티가 관리한다는 뜻
+(즉, CommentLike 안에 @ManyToOne private Comment comment; 가 있어야한다)
+
+-> 이쪽(Comment)은 읽기 전용(주인이 아님), 외래 키는 자식 테이블(CommentLike)에서 가짐
+
+
+cascade = CascadeType.ALL
+부모(Comment)에 대한 모든 영속성 작업이 자식(CommentLike)에도 전파됨
+댓글 저장 시 -> 좋아요도 같이 저장
+댓글 삭제 시 -> 좋아요도 같이 삭제
+댓글 업데이트 시 -> 좋아요도 같이 반영
+
+
+
+orphanRemoval = true
+부모와의 관계가 끊어진 자식 엔티티(고아 객체)는 DB에서도 자동 삭제됨
+
+comment.getLikes().remove(like);
+해당 like는 DB에서도 자동 삭제
+
+
+
+
+
+private Set<CommentLike> likes = new HashSet<>();
+댓글에 달린 좋아요들을 저장하는 컬렉션 필드
+
+Set
+중복 허용 하지 않음 (같은 사람이 같은 댓글에 여러 번 좋아요 못 누르게 할 수 있음)
+
+new HashSet<>()
+->
+NullPointerException 방지를 위해 처음부터 빈 컬렉션으로 초기화
+
+
+
+정리 해석
+이 코드는 댓글(Comment)이 가진 좋아요(CommentLike)목록을 관리하는 필드이다
+하나의 댓글에는 여러 좋아요가 달릴 수 있고, 댓글이 저장,수정,삭제 될 때 좋아요도 함께 처리된다.
+또한 댓글과의 연결이 끊긴 좋아요는 DB에서도 자동으로 삭제된다.
+좋아요는 중복을 허용하지 않으며, 기본적으로 빈 집합으로 시작한다.
