@@ -45,3 +45,82 @@ public class CommentLike {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }
+
+@Table(uniqueConstraints...)
+->
+하나의 댓글에 대해 같은 유저가 중복 좋아요를 하지 못하도록 제약.
+
+@ManyToOne(fetch = FetchType.LAZY)
+->
+여러 CommentLike 가 하나의 Comment 또는 User에 연결됨
+
+@OnDelete(action = OnDeliteAction.CASCADE)
+->
+댓글이나 유저가 삭제되면 관련 좋아요 기록도 자동 삭제됨
+
+
+FetchType.LAZY
+->
+DB에서 연관 엔티티(Comment, User)를 바로 불러오지 않고 필요할 때 가져옴
+->
+성능 최적화
+
+
+
+@Table(name = "comment_likes", uniqueConstraints =
+@UniqueConstraint(columnNames = {"comment_id", "user_id"}))
+->
+해당 부분은 CommentLike 엔티티의 테이블 설정(@Table)과 유니크 제약조건을 정의하는 부분
+
+
+// CommentLike 엔티티가 매핑될 DB테이블 이름을 "comment_likes"로 지정
+// uniqueConstraints: 특정 컬럼 조합에 대해 유니크 제약조건을 부여
+// 여기서는 comment_id와 user_id를 묶어서 유니크 제약을 걸었음
+// 즉, 같은 유저(user_id)가 같은 댓글(comment_id)에 대해
+// 중복으로 좋아요를 누르지 못하도록 DB차원에서 보장
+@Table(
+    name = "comment_likes",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"comment_id","user_id"})
+)
+
+정리->
+name = "comment_likes"
+실제 DB에 생성될 테이블명을 comment_likes로 지정
+(만약 지정하지 않으면 클래스 이름 CommentLike)를 기반으로 테이블명이 자동 생성됨.
+
+uniqueConstraints
+-> 복합 유니크 제약조건을 설정
+columnNames = {"comment_id", "user_id"}
+두 컬럼을 묶어서 중복 불가 규칙을 강제
+같은 유저가 같은 댓글에 대해 좋아요를 여러 번 누르는 것을 DB에서 차단
+
+즉, 이 설정은
+
+한 사용자는 특정 댓글에 대해 좋아요를 한 번만 누를 수 있다.   는 비즈니스 로직을
+
+데이터베이스 레벨에서 보장하는 역할을 한다
+
+---------------------------------
+
+
+@JoinColumn(name = "comment_id, nullable = false")
+->
+해당 어노테이션은 jpa에서 외래키(FK) 컬럼 매핑을 정의하는 부분
+
+@JoinColumn
+현재 엔티티(CommentLike)가 다른 엔티티(Comment)와 관계를 맺을 때,
+DB 테이블에 어떤 컬럼을 외래 키로 사용할지를 지정하는 어노테이션
+
+name = "comment_id"
+comment_likes 테이블에 comment_id 라는 컬럼이 생성되고,
+이 컬럼이 comment 테이블의 id와 연결(FK)됨
+
+nullable = false
+->
+comment_id는 반드시 값이 있어야 함
+즉, 댓글 없이 좋아요를 남길 수는 없다는 의미
+
+쉽게 말하면
+comment_likes 테이블에는 comment_id 라는 외래 키 컬럼이 생기고,
+이 값을 항상 존재해야 하며
+comment 테이블의 id를 참조하는 관계를 가짐
