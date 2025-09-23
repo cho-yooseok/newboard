@@ -34,7 +34,6 @@ public class Post {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User author;
 
-    // === 댓글 연관관계 설정 추가 ===
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments = new HashSet<>();
 
