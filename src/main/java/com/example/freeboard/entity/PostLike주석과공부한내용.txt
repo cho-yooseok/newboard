@@ -1,0 +1,40 @@
+주석
+
+/**
+PostLike 엔티티는 "게시글에 대한 좋아요" 정보를 저장하는 역할을 합니다
+어떤 사용자가(User) 어떤 게시글(Post)에 '좋아요'를 눌렀는지 기록합니다
+같은 사용자가 같은 게시글에 중복으로 좋아요를 누르지 못하도록 unique 제약조건을 설정합니다
+**/
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(
+    name = "post_likes",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
+    // post_id + user_id 조합을 유일하게 설정 -> 동일 유저가 같은 게시글에 여러 번 좋아요 불가
+)
+public class PostLike {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // 기본 키 (id)를 자동 증가 값으로 생성 (DB의)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    // 다대일 관계 : 여러 개의 PostLike -> 하나의 Post
+    // 지연 로딩(LAZY)으로 설정 -> PostLike를 조회할 때 Post는 필요할 때만 가져옴
+    @JoinColumn(name = "post_id", nullable = false)
+    // post_id 컬럼을 외래(FK)키로 매핑, null 불가
+    private Post post;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    // 다대일 관계 : 여러 개의 PostLike -> 하나의 User
+    // 지연 로딩(LAZY)으로 설정 -> PostLike를 조회할 때 User 는 필요할 때만 가져옴
+    @JoinColumn(name = "user_id", nullable = false)
+    // user_id 컬럼을 외래 키(FK)로 매핑, null 불가
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    // 연관된 User가 삭제되면 -> 해당 유저의 모든 좋아요 기록(PostLike)도 같이 삭제
+    private User user;
+}

@@ -24,4 +24,60 @@ public class Port {
     @Id             // PK(primary key) 지정
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     // 기본 키 자동 생성 (AUTO_INCREMENT 방식)
+    private Long id;
+
+    @Column(nullable = false)
+    // NOT NULL 제약조건 -> 반드시 값이 있어야 함
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    // NOT NULL + TEXT 타입(긴 문자열 저장 가능)
+    private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    // 다대일 관계 : 여러 POST가 하나의 User(author)에 속함
+    @JoinColumn(name = "user_id", nullable = false)
+    // FK(user_id) 컬럼 생성, null 허용 안 함
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    // User 삭제 시 해당 User가 작성한 Post도 삭제됨
+    private User author;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    // 일대다 관계 : 하나의 Post에 여러 Comment 존재
+    // mappedBy = "post" -> Comment 엔티티의 post 필드와 매핑됨
+    // CascadeType.ALL -> Post 저장/삭제 시 Comment도 같이 처리됨
+    // orphanRemoval=true -> Post에서 Comment가 제거되면 DB에서도 삭제됨
+    private Set<Comment> comments = new HashSet<>();
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;        // 생성 시간
+
+    private LocalDateTime updatedAt;        // 수정 시간
+
+    private Integer viewCount = 0;          // 조회수 (기본값 0)
+
+    private Integer likeCount = 0;          // 조회수 (기본값 0)
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    // 일대다 관계 : 하나의 Post에 여러 PostLike(좋아요 기록) 존재
+    // Post 삭제 시 연관된 좋아요도 같이 삭제됨
+    private Set<PostLike> likes = new HahsSet<>();
+
+    private boolean deleted = false;
+    // 논리적 삭제 여부 (false = 정상, true = 삭제 처리됨)
+
+    @PrePersist
+    // 엔티티 저장 전에 실행됨
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();   // 저장 시 현재 시각 기록
+        this.deleted = false;                   // 최초 생성 시 상태는 false로 고정
+    }
+
+    @PreUpdate
+    // 엔티티 업데이트 전에 실행됨
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now()    // 수정 시 현재 시각 기록
+    }
 }
+
+
