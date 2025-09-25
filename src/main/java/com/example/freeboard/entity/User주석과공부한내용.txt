@@ -1,0 +1,14 @@
+정리
+User 엔티티
+DB의 users 테이블과 매핑
+Spring Security의 UserDetails를 구현하여 로그인/인증 시 사용
+
+보안 관련
+getAuthorities() : 사용자의 권한을 ROLE_권한명 형태로 반환
+isAccountNonExpired() 등 : 계정 상태 관리 (현재는 전부 true → 제약 없음)
+
+비밀번호 관리
+setEncodedPassword() : 평문 비밀번호를 PasswordEncoder로 암호화 후 저장
+
+Auditing
+createdAt : 사용자 계정 생성 시간을 자동 기록
