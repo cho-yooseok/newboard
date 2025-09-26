@@ -12,3 +12,17 @@ setEncodedPassword() : 평문 비밀번호를 PasswordEncoder로 암호화 후 �
 
 Auditing
 createdAt : 사용자 계정 생성 시간을 자동 기록
+
+
+@Override
+재정의
+
+여기서는 UserDetails 인터페이스에 정의된 getPassword() 메서드를 정의하고 있다.
+
+public String getPassword()
+
+public 접근제어자
+String 반환타입 String 문자열을 반환한다는 의미
+getPassword()
+메서드 이름
+사용자 비밀번호를 가져오는 메서드
