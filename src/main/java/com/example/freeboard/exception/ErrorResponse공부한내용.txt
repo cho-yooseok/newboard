@@ -1,0 +1,91 @@
+package com.example.freeboard.exception;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.http.HttpStatus;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Getter
+@Setter
+// JSON 직렬화 시 null 값인 필드는 응답에 포함하지 않도록 설정
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ErrorResponse {
+
+    // 에러가 발생한 시각
+    private LocalDateTime timestamp;
+
+    // HTTP 상태 코드 (예: 400, 404, 500 등)
+    private int status;
+
+    // 상태 코드에 해당하는 표준 에러 문구 (예: "Bad Request", "Not Found")
+    private String error;
+
+    // 상세 에러 메시지 (예: "username은 필수 입력값입니다.")
+    private String message;
+
+    // 요청 경로 (예: "/api/users")
+    private String path;
+
+    // 여러 개의 필드 오류가 있을 경우 (예: {"username":"필수 입력", "password":"최소 8자 이상"})
+    private Map<String, String> errors;
+
+    /**
+     * 일반적인 단일 에러 응답을 위한 생성자
+     *
+     * @param timestamp 에러 발생 시각
+     * @param status    HTTP 상태 코드
+     * @param message   상세 에러 메시지
+     * @param path      요청 경로
+     */
+    public ErrorResponse(LocalDateTime timestamp, int status, String message, String path) {
+        this.timestamp = timestamp;
+        this.status = status;
+        // HttpStatus.valueOf(status).getReasonPhrase() → 상태 코드에 맞는 표준 메시지
+        // 예: 400 → "Bad Request", 404 → "Not Found"
+        this.error = HttpStatus.valueOf(status).getReasonPhrase();
+        this.message = message;
+        this.path = path;
+    }
+
+    /**
+     * 여러 필드 오류를 포함한 에러 응답을 위한 생성자
+     *
+     * @param timestamp 에러 발생 시각
+     * @param status    HTTP 상태 코드
+     * @param message   상세 에러 메시지
+     * @param path      요청 경로
+     * @param errors    필드별 오류 정보 (Map 형식)
+     */
+    public ErrorResponse(LocalDateTime timestamp, int status, String message, String path, Map<String, String> errors) {
+        // 위의 기본 생성자를 호출해서 공통 필드 초기화
+        this(timestamp, status, message, path);
+        // 필드 오류 정보 설정
+        this.errors = errors;
+    }
+}
+
+
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+JSON 응답에서 null인 값은 제외
+예: errors 필드가 null 이면 JSON에 나타나지 않음 -> 응답이 깔끔해짐
+
+
+필드설명
+timestamp
+언제 에러가 발생했는지 기록
+
+status
+HTTP 상태코드 (숫자)
+
+
+
+this(timestamp, status, message, path);
+는 생성자 안에서 다른 생성자를 호출하는 코드
+
+해석
+this(...) -> 같은 클래스(ErrorResponse) 안에 있는 다른 생성자를 호출한다는 뜻
+즉,
+중복된 초기화 로직을 줄이기 위한 방법

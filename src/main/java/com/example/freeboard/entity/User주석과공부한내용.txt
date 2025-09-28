@@ -26,3 +26,10 @@ String 반환타입 String 문자열을 반환한다는 의미
 getPassword()
 메서드 이름
 사용자 비밀번호를 가져오는 메서드
+
+
+@Override
+public boolean isAccountNonExpired() {
+    return true;        // 계정 만료 여부 (true : 만료되지 않음)
+}
+

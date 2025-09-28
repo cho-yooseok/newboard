@@ -1,0 +1,383 @@
+package com.example.freeboard.exception;
+
+// 예외타입들(발생 가능한 다양한 예외 클래스들)을 임포트
+// 이러한 예외들을 잡아서(= 처리해서) 클라이언트에게 일관된 응답을 돌려주고자함
+
+import org.springframework.dao.DataIntegrityViolationException;         // DB 제약조건 위반 예외
+import org.springframework.http.HttpStatus;                             // HTTP 상태 코드 enum
+import org.springframework.http.ResponseEntity;                         // 응답 본문 + 상태 코드를 담는 객체
+import org.springframework.security.access.AccessDeniedException;       // 권한 없음 예외 (인가 실패)
+import org.springframework.security.core.AuthenticationException;       // 인증 실패 예외 (로그인 실패 등)
+import org.springframework.web.bind.MethodArgumentNotValidException;    // @Valid 검증 실패 예외
+import org.springframework.web.bind.annotation.ControllerAdvice;        // 전역(글로벌) 예외 처리기 선언 어노테이션
+import org.springframework.web.bind.annotaion.ExceptionHandler;         // 어떤 예외를 처리할지 지정하는 어노테이션
+import org.springframework.web.context.request.WebRequest;              // 요청 정보(경로 등)를 얻기 위한 객체
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+GlobalExceptionHandler
+
+역할:
+애플리케이션 전체에서 던져지는(발생하는) 예외를 한 곳에서 받아서
+사람이 읽기 쉬운 형태의 JSON 응답으로 바꿔 클라이언트에 반환하는 클래스입니다.
+
+각 컨트롤러마다 try-catch를 둘 필요 없이, 공통된 오류 처리 로직을 중앙에서 관리할 수 있습니다
+클라이언트(프론트엔드)는 항상 일관된 형식의 에러 응답을 받으므로 처리하기 쉽습니다
+
+
+
+
+@Controller
+public class GlobalExceptionalHandler {
+
+    // 1) DB 제약조건 위반 예외 처리
+    // 예 : 삭제하려는 엔티티가 다른 테이블의 FK(외래키)에 참조되고 있어 삭제가 안 될 때
+    // 스프링에서는 DataIntegrityViolationException 이 발생합니다
+    // 여기서는 HTTP 409 CONFLICT 상태로 응답합니다
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+        DataIntegrityViolationException ex, WebRequest request) {
+
+        // ErrorResponse는 우리가 정의한 DTO(응답 객체)입니다.
+        // 생성자에 (발생시간, 상태코드, 상세메시지, 요청경로)를 넣어 응답 본문을 만듭니다.
+        ErrorResponse errorDetails = new ErrorResponse(
+            LocalDateTime.now(),                        // 에러가 발생한 시각
+            HttpStatus.CONFLICT.value(),                // 409
+            ex.getMessage(),                            // 예외에서 전달된 메시지 (디버깅/ 로그에 유용)
+            request.getDescription(false)               // 요청에 대한 간단한 설명(예 : uri=/api/users/1)
+        );
+
+        // ResponseEntity에 본문과 상태코드를 담아 반환합니다
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
+
+
+    // 2) 리소스를 찾지 못했을 때 처리 (404 Not Found)
+    //  예: 사용자 ID로 조회했는데 DB에 없을 경우 ResourceNotFoundException을 던진다 가정
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+        ResourceNotFoundException ex, WebRequest request) {
+
+        ErrorResponse errorDetails = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.NOT_FOUND.value(),           // 404
+            ex.getMessage(),
+            request.getDescription(false)
+        );
+        return new ReponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
+    // 3) 사용자명 중복 등 커스텀 중복 예외 처리 (409 Conflict)
+    // 예 : 회원가입 시 이미 같은 username 이 있으면 DuplicateUsernameException 을 던짐
+    @ExceptionHandler(DuplicateUsernameException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateUsernameException(
+            DuplicateUsernameException ex, WebRequest request) {
+
+        ErrorResponse errorDetails = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),    // 409
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
+
+
+
+    // 4) 권한 없음(인가 실패) 처리 (403 Forbidden)
+    // 예: 로그인은 했지만 해당 리소스에 접근할 권한이 없는 경우 발생
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException ex, WebRequest request) {
+
+        // 사용자에게는 친절한 메시지로, 내부에는 원본 예외 메시지를 붙여서 반환
+        ErrorResponse errorDetails = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.FORBIDDEN.value(), // 403
+            "접근 권한이 없습니다:" + ex.getMessage(),
+            request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+    }
+
+
+}
+
+
+해설
+@ControllerAdvice
+모든 컨트롤러에서 발생한 예외를 모아서 처리하는 전역 예외 처리기다
+
+@ExceptionHandler(예외클래스.class)
+이 메서드는 지정한 예외가 발생할 때 자동으로 호출된다
+
+ErrorResponse
+우리가 만든 표준 에러 응답 DTO
+일관된 json 형태로 클라이언트에게 에러를 보낸다
+
+로그 남기기
+handleGlobalException 같은 곳에서는 ex.printStackTrace() 또는 로거 logger.error(....ex)로
+에러 로그를 남겨야 문제 원인을 찾기 쉽다
+
+보안 주의
+예외 메시지를 그대로 클라이언트에 노출하면 민감한 정보가 유출될 수 있으므로, 운영 환경에서는 메시지를 적절히 가공하거나
+내부 로그로 남기고 클라이언트엔 일반 메시지를 주는 것이 안전하다
+
+
+
+
+DataIntegrityViolationException.class
+스프링 프레임워크에서 제공하는 예외 클래스입니다
+의미
+데이터 무결성(Data Integrity)을 깨뜨리는 잘못된 작업이 DB에서 발생했을 때 던져지는 예외.
+예:
+user를 삭제하려는데 다른 테이블에서 그 user_id 를 참조하고 있어서 삭제 불가할 때
+NOT NULL 컬럼에 null 값을 넣으려고 할 때
+UNIQUE 제약 조건이 걸린 칼럼에 중복 값을 넣으려고 할 때
+
+즉, DB규칙(제약 조건)을 위반했을 때 발생하는 오류
+
+Integrity (인테그리티)
+원래 뜻 : 온전함, 완전성, 진실성
+DB에서 무결성이라고 번역 -> 데이터가 정확하고 일관되게 유지되는 성질
+예:
+학생이 존재하지 않는데 성적 테이블에 그 학생 번호가 들어가면 무결성이 깨짐
+주민번호가 중복되면 무결성이 깨짐
+
+Violation (바이올레이션)
+뜻 : 위반 침해 어김
+즉, 규칙이나 약속을 어긴 것
+
+Exception (익셉션)
+뜻 : 예외 특이한 상황
+프로그래밍에서 정상적인 흐름을 방해하는 오류 상황을 가리킵니다
+예:
+파일을 찾을 수 없다 -> FileNotFoundException
+DB제약조건 위반 -> DataIntegrityViolationException
+
+
+
+ResponseEntity<ErrorResponse>
+메서드의 리턴 타입(return type)
+ResponseEntity : 스프링에서 제공하는 객체로, HTTP 응답 전체(상태코드 + 헤더 + 바디)를 담음
+<ErrorResponse> : 제네릭 타입 -> HTTP 응답의 바디(body)에 들어가는 데이터가 ErrorResponse 객체라는 뜻
+즉, 이 메서드는
+에러 정도(ErrorResponse)를 담은  HTTP 응답(ResponseEntity)을 반환한다
+
+
+public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(...)
+->
+이 메서드는 DB무결성 위반 예외를 처리해서,
+ErrorResponse 객체를 담은 HTTP응답(ResponseEntity)을 반환한다.
+
+즉,
+이 메서드는
+에러정보(ErrorResponse)를 담은 HTTP응답(ResponseEntity)을 반환한다
+
+
+
+
+DataIntegrityViolationException ex, WebRequest request) {
+}
+
+1. DataIntegrityViolationException ex
+DataIntegrityViolationException -> DB 무결성 위반 예외 클래스 (앞에서 설명한 "데이터 규칙 위반 오류")
+ex -> 이 예외 객체를 담을 변수 이름
+즉: DB 제약 조건 위반이 발생했을 때 던져진 예외 객체를 ex라는 이름으로 받는다
+
+예:
+ex.getMessage() -> 예외 메시지 확인 가능
+
+
+2. webRequest request
+WebRequest -> 스프링에서 제공하는 객체
+현재 HTTP요청(Request)에 대한 정보(요청 URL, 파라미터 등)를 담고 있음
+request.getDescription(false) 같은 메서드로 어떤 요청에서 오류가 발생했는지 확인 가능
+
+(DataIntegrityViolationException ex, WebRequest request)
+DB 무결성 위반 예외 객체(ex)와, 현재 웹 요청 정보(request)를 매개변수로 받는다
+
+
+즉, 메서드 전체는 이렇게 읽을 수 있다.
+public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+    DataIntegrityViolationException ex, WebRequest request)
+
+    ->
+    DB 제약조건 위반 예외(ex)와 웹 요청 정보(request)를 받아서, ErrorResponse 형태의 응답을 만들어 반환하는 메서드
+
+
+
+
+// ResourceNotFoundException 처리 (HTTP 404 NOT FOUND)
+->
+리소스를 찾을 수 없을 때 (ResourceNotFoundException 발생 시) 이 메서드가 실행된다
+클라이언트에게는 HTTP 상태 코드 404 Not Found 를 응답한다는 의미
+
+
+
+@ExceptionHandler(ResourceNotFoundException.class)
+@ExceptionHandler
+-> 특정 예외가 발생했을 때 실행할 메서드를 지정하는 어노테이션
+
+
+(ResourceNotFoundException.class)
+->
+ResourceNotFoundException 예외가 발생하면 이 메서드 실행
+
+
+
+public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+
+}
+
+메서드 선언부
+
+ResponseEntity<ErrorResponse>
+-> 에러 응답(ErrorResponse)을 담은 HTTP 응답 객체를 반환한다는 뜻
+
+매개변수:
+ResourceNotFoundException ex -> 발생한 예외 객체
+WebRequest request -> 요청 정보 (어떤 요청에서 오류가 났는지 알 수 있음)
+
+
+
+ErrorResponse errorDetails = new ErrorResponse(
+    LocalDateTime.now(),
+    HttpStatus.NOT_FOUND.value(),
+    ex.getMessage(),
+    request.getDescription(false)
+);
+
+ErrorResponse 객체를 생성해서 에러 정보를 담음
+LocalDateTime.now() -> 오류 발생 시간.
+HttpStatus.NOT_FOUND.value() -> 404 상태 코드 숫자값(404)
+ex.getMessage() -> 예외에서 전달된 메시지(예 : "해당 게시글을 찾을 수 없습니다")
+request.getDescription(false) -> 요청 경로 정보(예 : "uri=/api/posts/99")
+
+
+
+
+return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+ResponseEntity 를 생성해서 반환
+errorDetails -> 응답 본문(body)에 담길 json
+HttpStatus.NOT_FOUND -> 응답 상태 코드 404
+
+->
+이 메서드는 리소스를 찾을 수 없을 때(예: 없는 게시글을 요청했을 때) 실행되고,
+클라이언트에게 아래와 같은 404에러 JSON 응답을 돌려줍니다.
+
+
+
+
+@ExceptionHandler(DuplicateUsernameException.class)
+어노테이션 -> 이 메서드는 DuplicateUsernameException 이 발생했을 때 실행된다.
+즉, 사용자 이름이 중복될 때 이 메서드가 동작
+
+
+
+public ResponseEntity<ErrorRespone> handleDuplicateUsernameException(
+        DuplicateUsernameException ex, WebRequest request) {
+        }
+메서드 선언
+반환 타입: ResponseEntity<ErrorResponse> -> 에러 정보를 담은 HTTP 응답을 돌려준다
+매개변수:
+DuplicateUsernameException ex -> 발생한 예외 객체(여기 안에 오류 메시지가 들어있음)
+
+WebRequest request -> 현재 요청 정보 (어떤 요청에서 에러가 났는지 알 수 있음)
+
+
+ErrorResponse errorDetails = new ErrorResponse(
+    LocalDateTime.now(),
+    HttpStatus.CONFLICT.value(),        // 409
+    ex.getMessage(),
+    request.getDescription(false)
+);
+
+ErrorResponse 객체 생성(실제로 JSON 응답으로 변환됨)
+LocalDateTime.now() -> 에러 발생 시간 기록
+HttpStatus.CONFLICT.value() -> 숫자 상태 코드 409  (409 = CONFLICT = 충돌)
+ex.getMessage() -> 예외 메시지 (예 : 이미 존재하는 사용자 이름입니다)
+request.getDescription(false) -> 요청 경로 정보 (예 : "uri=/api/users")
+
+
+
+return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+ResponseEntity에 errorDetails를 담아서 클라이언트에게 반환
+상태코드 HttpStatus.CONFLICT (409)
+즉, 요청이 서버 규칙과 충돌해서 처리할 수 없다 라는 의미
+
+
+이 메서드는 회원가입 시 username이 중복될 때 실행됩니다
+클라이언트는 HTTP 409 (CONFLICT) 상태 코드와 함께 JSON 형식의 에러 메시지를 받습니다
+
+
+
+request.getDescription(false)
+
+request
+WebRequest 객체
+현재 들어온 HTTP 요청(request) 정보를 담고 있습니다
+예 : GET   /api/users/1   같은 요청 정보
+
+
+getDescription(boolean includeClientInfo)
+WebRequest 가 제공하는 메서드
+요청에 대한 설명 문자열을 반환해 줍니다
+boolean includeClientInfo -> 클라이언트 정보(IP 등)를 포함할지 말지 결정하는 옵션
+
+
+false를 넣으면?
+클라이언트 정보는 빼고, 요청경로(uri)만 돌려줍니다
+예
+request.getDescription(false);
+// 결과 : uri=/api/users/1
+
+
+true를 넣으면?
+요청 경로(uri) + 클라이언트 정보(IP 등)를 같이 돌려줍니다
+예:
+request.getDescription(true);
+// 결과: "uri=/api/users/1;client=127.0.0.1"
+
+
+request.getDescription(false) -> "이번 요청이 어디로 왔는지(URI)를 문자열로 돌려준다"
+즉, 에러가 발생한 요청 경로를 응답에 포함시키는 역할
+
+
+
+
+@ExceptionHandler(AccessDeniedException.class)
+AccessDeniedException(접근 권한 없음 에러)이 발생했을 때 이 메서드가 실행되도록 지정
+
+public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+    AccessDeniedException ex, WebRequest request) {
+    }
+
+메서드 이름은 handleAccessDeniedException
+ex -> 발생한 AccessDeniedException 객체(예외에 대한 설명이 들어 있음)
+request -> 어떤 요청에서 문제가 생겼는지 알려주는 요청 정보
+반환타입은 ResponseEntity<ErrorResponse> -> HTTP 응답 (상세 에러 정보 포함)
+
+
+// 사용자에게는 친절한 메세지로, 내부에는 예외 메시지를 붙여서 반환
+ErrorResponse errorDetails = new ErrorResponse(
+    LocalDateTime.now(),
+    HttpStatus.FORBIDDEN.value(),       // 403
+    "접근 권한이 없습니다:" + ex.getMessage()
+    request.getDescription(false)
+);
+
+ErrorResponse 객체를 만들어 에러 세부 정보를 담음
+LocalDateTime.now() -> 에러가 발생한 시간 기록
+HttpStatus.FORBIDDEN.value() -> 403 숫자 코드 (권한 없음)
+"접근 권한이 없습니다:" + ex.getMessage() -> 사용자 친화적 메시지 + 실제 예외 메시지
+request.getDescription(false) -> 문제가 발생한 요청 경로(URL)
+
+
+return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+위에서 errorDetails 를 HTTP 응답(ResponseEntity) 에 담아 반환
+상태 코드 403 FORBIDDEN 을 함께 내려줌
+

@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorDetails = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.CONFLICT.value(),
-                ex.getMessage(), // UserService에서 던진 메시지가 여기에 담깁니다.
+                ex.getMessage(), // 예외에서 전달된 메시지(디버깅/로그에 유용) , UserService에서 던진 메시지가 여기에 담깁니다.
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);

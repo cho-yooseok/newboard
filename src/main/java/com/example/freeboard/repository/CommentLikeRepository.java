@@ -17,8 +17,6 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
 
     boolean existsByCommentAndUser(Comment comment, User user);
 
-    Long countByComment(Comment comment);
-
     // === 사용자 삭제를 위해 추가된 메서드 ===
     @Transactional
     @Modifying

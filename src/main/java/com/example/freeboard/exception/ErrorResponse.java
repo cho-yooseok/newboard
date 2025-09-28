@@ -13,10 +13,10 @@ import java.util.Map;
 public class ErrorResponse {
     private LocalDateTime timestamp;
     private int status;
-    private String error; // HttpStatus 에러 이름 (e.g., NOT_FOUND, CONFLICT)
+    private String error;
     private String message;
     private String path;
-    private Map<String, String> errors; // 유효성 검사 오류 목록 (필드명: 메시지)
+    private Map<String, String> errors;
 
     public ErrorResponse(LocalDateTime timestamp, int status, String message, String path) {
         this.timestamp = timestamp;

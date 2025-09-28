@@ -1,0 +1,3 @@
+enum(열거현)
+java에서 enum은 상수 집합을 정의하는 클래스
+UserRole.USER,   UserRole.ADMIN 처럼 고정된 값만 가질 수 있다.
