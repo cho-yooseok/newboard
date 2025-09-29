@@ -29,7 +29,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             countQuery = "SELECT COUNT(c) FROM Comment c WHERE LOWER(c.content) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Comment> findByContentContainingIgnoreCaseForAdmin(@Param("search") String search, Pageable pageable);
 
-    // === 사용자 삭제를 위해 추가된 메서드 ===
+    // === 사용자 삭제 메서드 ===
     @Transactional
     @Modifying
     void deleteByAuthor(User author);

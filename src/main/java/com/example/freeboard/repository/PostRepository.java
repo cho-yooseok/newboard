@@ -17,16 +17,16 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    // (기존) 모든 활성 게시글 조회
+    // 모든 활성 게시글 조회
     @Query(value = "SELECT p FROM Post p JOIN FETCH p.author WHERE p.deleted = false",
             countQuery = "SELECT COUNT(p) FROM Post p WHERE p.deleted = false")
     Page<Post> findAllWithAuthor(Pageable pageable);
 
-    // (기존) 단일 활성 게시글 조회
+    // 단일 활성 게시글 조회
     @Query("SELECT p FROM Post p JOIN FETCH p.author WHERE p.id = :id AND p.deleted = false")
     Optional<Post> findByIdWithAuthor(@Param("id") Long id);
 
-    // (기존) 검색 기능
+    // 검색 기능
     @Query(value = "SELECT p FROM Post p JOIN FETCH p.author WHERE p.deleted = false AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :searchKeyword, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :searchKeyword, '%')))",
             countQuery = "SELECT COUNT(p) FROM Post p WHERE p.deleted = false AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :searchKeyword, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :searchKeyword, '%')))")
     Page<Post> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCaseWithAuthor(@Param("searchKeyword") String searchKeyword, Pageable pageable);
@@ -47,7 +47,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.deleted = false WHERE p.id = :id")
     void restoreById(@Param("id") Long id);
 
-    // === 사용자 삭제를 위해 추가된 메서드 ===
+    // === 사용자 삭제 메서드 ===
     @Transactional
     @Modifying
     void deleteByAuthor(User author);

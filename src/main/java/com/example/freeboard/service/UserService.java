@@ -6,7 +6,7 @@ import com.example.freeboard.dto.UserDto;
 import com.example.freeboard.entity.User;
 import com.example.freeboard.entity.UserRole;
 import com.example.freeboard.exception.ResourceNotFoundException;
-import com.example.freeboard.repository.*; // repository 임포트 변경
+import com.example.freeboard.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

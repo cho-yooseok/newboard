@@ -1,0 +1,17 @@
+
+@ResponseStatus(HttpStatus.NOT_FOUND) // 이 예외가 발생하면 HTTP 응답 상태 코드를 404(NOT FOUND)로 설정
+public class ResourceNotFoundException extends RuntimeException { // 런타임 예외를 상속받아 커스텀 예외 정의
+
+
+    // 단일 매개변수 생성자
+    // 예외 메시지를 받아 부모 클래스(RuntimeException)에 전달
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+
+    // 두 매개변수 생성자
+    // 예외 메시지와 원인이 된 다른 예외 객체(cause)를 함께 전달할 수 있음
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}

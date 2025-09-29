@@ -475,4 +475,5 @@ ResponseEntity를 통해 HTTP400 (Bad Request) 상태와 함께 ErrorResponse를
 이 메서드는 DTO검증(@Valid) 실패 시 발생하는 예외를 잡아,
 어떤 필드가 잘못되었는지,
 왜 잘못되었는지 메시지를 모아서,
-400 Bad Request 응답으로 클라이언트에게 반환하는 역할을 합니다
+400 Bad Request 응답으로 클라이언트에게 반환하는 역할을 합니다.
+

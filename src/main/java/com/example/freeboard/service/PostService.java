@@ -1,6 +1,3 @@
-
-
-
 package com.example.freeboard.service;
 
 import com.example.freeboard.dto.PostCreateRequest;

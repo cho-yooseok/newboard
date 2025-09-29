@@ -1,6 +1,5 @@
 package com.example.freeboard.service;
 
-import com.example.freeboard.entity.User; // 우리가 만든 User 엔티티
 import com.example.freeboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
