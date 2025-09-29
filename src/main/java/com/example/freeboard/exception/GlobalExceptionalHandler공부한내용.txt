@@ -103,6 +103,48 @@ public class GlobalExceptionalHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
     }
 
+    // 5) 인증 실패 처리 (401 Unauthorized)
+    // 예 : 로그인 시 자격증명(아이디/비밀번호)이 틀렸을 때 발생하는 예외들
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            AuthenticationException ex, WebRequest request) {
+
+        ErrorResponse errorDetails = new ErrorResponse(
+            LocalDateTime.now(),
+            HttpStatus.UNAUTHORIZED.value(),    // 401
+            "인증 실패: " + ex.getMessage(),
+            request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
+    }
+
+
+    // 6) 요청 바디(@RequestBody)나 DTO(@Valid) 유효성 검사 실패 처리 (400 Bac Request)
+    // MethodArgumentNotValidException은 스프링이 @Valid 어노테이션 체크 실패 시 던집니다
+    // 여기서는 필드별 에러 메시지를 Map으로 모아서 ErrorResponse.errors에 담아 반환합니다
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex, WebRequest request) {
+
+        // errors Map 생성: key = 필드명, value = 에러 메시지
+        Map<String, String> errors = new HashMap<>();
+        // getFieldErrors()로 각 필드의 검증 실패 정보를 가져와 Map에 넣습니다
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+            errors.put(error.getField(), error.getDefaultMessage()));
+
+        ErrorResponse errorDetails = new ErrorResponse(
+                LocalDatetime.now(),
+                HttpStatus.BAD_REQUEST.value(),     // 400
+                "유효성 검사 실패",                    // 일반적인 메시지
+                request.getDescription(false),
+                errors                              // 필드별 상세 메시지 포함
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+
+
 
 }
 
@@ -381,3 +423,56 @@ return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
 위에서 errorDetails 를 HTTP 응답(ResponseEntity) 에 담아 반환
 상태 코드 403 FORBIDDEN 을 함께 내려줌
 
+
+
+
+@ExceptionHandler(MethodArgumentNotValidException.class)
+public ResponseEntity<ErrorResponse> handleValidationExceptions(
+    MethodArgumentNotValidException ex, WebRequest request
+
+@ExceptionHandler(MethodArgumentNotValidException.clss)
+컨트롤러에서 @Valid 나 @Validated 검증이 실패 했을 때 발생하는
+MethodArgumentNotValidException 예외를 처리하는 메서드라는 뜻
+
+메서드 인자
+MethodArgumentNotValidException ex : 어떤 필드에서 어떤 검증 오류가 발생했는지 담고 있는 예외 객체
+WebRequest request : 요청 관련 정보 (요청 URL 등)를 가져올 수 있음
+
+
+
+Map<String, string> errors = new HashMap<>();
+ex.getBindingResult().getFieldErrors().forEach(error ->
+    errors.put(error.getField(), error.getDefaultMessage()));
+errors 라는 Map을 만들어서, 검증 실패한 필드 이름 -> 오류 메시지 형태로 저장합니다
+예를들어
+username 필드에 "아이디는 필수입니다"
+password 필드에 "비밀번호는 최소 8자 이상이어야 합니다"
+이런 식으로 담깁니다
+
+
+ErrorResponse errorDetails = new ErrorResponse(
+        LocalDateTime.now(),
+        HttpStatus.BAD_REQUEST.value(),     // 400
+        "유효성 검사 실패",                    // 일반적인 메시지
+        request.getDescription(false),
+        errors                              // 필드별 상세 메시지 포함
+);
+
+ErrorResponse 라는 커스텀 에러 응답 객체를 생성합니다
+LocalDateTime.now() -> 에러 발생 시각
+HttpStatus.BAD_REQUEST.value() -> 상태 코드 400
+"유효성 검사 실패" -> 공통 에러 메시지
+request.getDescription(false) -> 요청 정보
+errors          -> 필드별 에러 메시지들
+
+
+
+return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+ResponseEntity를 통해 HTTP400 (Bad Request) 상태와 함께 ErrorResponse를 반환합니다
+클라이언트는 JSON 응답으로 에러 발생 원인을 상세히 받을 수 있습니다
+
+
+이 메서드는 DTO검증(@Valid) 실패 시 발생하는 예외를 잡아,
+어떤 필드가 잘못되었는지,
+왜 잘못되었는지 메시지를 모아서,
+400 Bad Request 응답으로 클라이언트에게 반환하는 역할을 합니다
