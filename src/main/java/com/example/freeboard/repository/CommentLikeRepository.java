@@ -13,11 +13,13 @@ import java.util.Optional;
 
 @Repository
 public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> {
+    // === 특정 댓글과 특정 사용자의 좋아요 찾기 ===
     Optional<CommentLike> findByCommentAndUser(Comment comment, User user);
 
+    // === 특정 댓글과 특정 사용자의 좋아요 여부 확인 ===
     boolean existsByCommentAndUser(Comment comment, User user);
 
-    // === 사용자 삭제 메서드 ===
+    // === 특정 사용자가 누른 모든 좋아요 삭제 ===
     @Transactional
     @Modifying
     void deleteByUser(User user);

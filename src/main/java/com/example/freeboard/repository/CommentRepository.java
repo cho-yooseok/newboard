@@ -20,7 +20,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     Long countByPostId(Long postId);
 
-    // --- 관리자 기능 추가 ---
+    // 관리자 기능
     @Query(value = "SELECT c FROM Comment c JOIN FETCH c.author JOIN FETCH c.post",
             countQuery = "SELECT COUNT(c) FROM Comment c")
     Page<Comment> findAllForAdmin(Pageable pageable);
