@@ -22,7 +22,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    // === 연관 데이터 삭제를 위해 Repository 주입 ===
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
@@ -56,14 +55,6 @@ public class UserService {
     @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
-    }
-
-    @Transactional
-    public void changePassword(String username, String newPassword) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
     }
 
     @Transactional(readOnly = true)

@@ -79,7 +79,7 @@ public class PostService {
                 .viewCount(post.getViewCount())
                 .likeCount(likeCount)
                 .commentCount(commentCount)
-                .likedByCurrentUser(isLiked) // KEY POINT: DTO에 '좋아요' 상태를 담아 반환합니다.
+                .likedByCurrentUser(isLiked)
                 .build();
     }
 
