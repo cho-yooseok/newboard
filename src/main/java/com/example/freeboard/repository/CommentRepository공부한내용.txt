@@ -30,8 +30,22 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // countQuery: 전체 개수를 세기 위한 별도 쿼리
 
     // 관리자 검색기능
+    // 관리자 페이지에서 댓글 내용 (content) 기준으로 검색 + 페이징
+    @Query(value = "SELECT c FROM Comment c JOIN FETCH c.author JOIN FETCH c.post" +
+            "WHERE LOWER(c.content) LIKE LOWER(CONCAT('%', : search, '%'))")
+    Page<Comment> findByContentContainingIgnoreCaseForAdmin(@Param("search")) String search, Pageable pageable);
+    //  검색어(search)를 포함하는 댓글 내용만 조회 (대소문자 무시)
+    // SQL LIKE 연산으로 부분 검색 가능
+    // JOIN FETCH로 author, post 를 함께 불러옴
+    // Page<Comment>: 페이징된 검색 결과 반환
 
 
+    // 사용자 삭제 메서드
+    @Transcational
+    @Modifying
+    void deleteByAuthor(User author);
+    // 특정 사용자가 작성한 모든 댓글 삭제
+    // 보통 회원 탈퇴 시 함께 호출
 
 }
 
@@ -68,3 +82,274 @@ value 쿼리처럼 JOIN을 포함하지 않고 단순히 개수만 반환
 
 한 줄 해석
 댓글(Comment)을 작성자(author), 게시글(post)와 함께 조인해서 조회하고, 페이징을 위한 전체 개수는 따로 세어온다.
+
+
+
+
+public interface CommentRepository extends JpaRepository<Comment, Long> 에서 인터페이스란 무슨 뜻인가?
+
+인터페이스(interface)란?
+자바에서 약속(규칙)을 정의하는 역할을 하는 문법
+클래스처럼 객체를 만들 수 있는 것이 아니라, 메서드의 형태(이름, 매개변수, 반환 타입)만 정의해둔 틀
+실제 동작(구현)은 인터페이스를 implements 한 클래스가 작성해야 함
+
+
+즉, 인터페이스는 "이런 기능을 반드시 제공하라"하고 강제하는 일종의 설계도입니다
+
+
+
+
+public interface CommentRepository extends JpaRepository <Comment, Long>
+
+CommentRepository -> 인터페이스 (클래스 아님)
+extends JpaRepository<Comment, Long>
+스프링이 제공하는 JpaRepository 인터페이스를 상속받음
+그러면 save(), findById(), findAll(), delete() 같은 기본 CRUD 메서드를 자동으로 사용할 수 있음
+
+
+정리
+CommentRepository는 댓글(Comment)엔티티를 DB에서 CRUD 할 수 있도록 약속된 기능을 제공하는 인터페이스이고,
+실제 구현체는 스프링 데이터 JPA 가 자도응로 만들어줍니다
+
+
+
+
+public interface CommentRepository extends JpaRepository<Comment, Long> {
+
+}
+
+public
+모든 패키지에서 접근 가능하다
+
+interface
+이건 클래스가 아니라 인터페이스(규칙/설계도)다
+
+CommentRepository
+인터페이스 이름 (댓글과 관련된 DB 작업을 담당)
+
+extends JpaRepository<Comment, Long>
+->
+JpaRepository 인터페이스를 상속받는다
+
+JpaRepository<Comment, Long> : JPA에서 제공하는 CRUD(등록, 조회, 수정, 삭제) 기능을 자동으로
+사용할 수 있게 해준다
+
+
+<Comment, Long>
+Comment
+이 저장소가 다룰 엔티티 타입 (댓글 엔티티)
+Long -> 댓글의 Primary Key(ID) 타입
+
+
+
+CommentRepository는 댓글(Comment) 엔티티를 관리하는 저장소 인터페이스이며,
+JpaRepository를 상속받아 기본적인 DB접근 기능(CRUD)을 자동으로 제공받는다.
+
+
+@Query(
+    value = "SELECT c FROM Comment c JOIN FETCH c.author JOIN FETCH c.post",
+    countQuery = "SELECT COUNT(c) FROM Comment c"
+    페이징 처리를 할 때 전체 댓글 수를 구하기 위한 카운트 쿼리
+    fetch join은 카운트할 때 불필요하므로, 단순히 COUNT(c)로 개수만 구한다.
+
+    댓글을 조회하면서 작성자(author)와 게시글(post) 정보를 함께 즉시 로딩하고, 페이징을 위한 전체 댓글 수는
+    따로 COUNT 쿼리로 구한다
+
+
+
+
+
+
+
+
+
+
+List<Comment> findByPostId(Long postId);
+리턴 타입: List<Comment>
+Comment 객체들의 리스트를 반환합니다.
+즉, 여러 개의 댓글을 가져옵니다
+
+메서드 이름 : findByPostId
+Jpa의 쿼리 메서드 규칙에 따라, postId 값으로 댓글들을 찾아온다는 의미
+즉, Comment 엔티티에 있는 postId(혹은 연관된 Post의 Id) 컬럼을 기준으로 조회합니다.
+
+파라미터 : Long postId
+특정 게시글의 Id를 받아서, 그 게시글에 달린 댓글들을 가져옵니다
+
+
+
+List<Comment> findByPostId(Long postId);
+->
+특정 게시글의 ID(postId)에 해당하는 댓글들을 모두 찾아서
+List<Comment>로 반환한다.
+
+
+
+Long countByPostId(Long postId);
+
+리턴 타입 : Long
+숫자 (개수)를 반환합니다.
+
+메서드 이름 : countByPostId
+JPA쿼리 메서드 규칙에 따라 postId를 기준으로 레코드 개수를 센다   는 의미입니다
+
+파라미터 : (Long postId)
+특정 게시글의 ID(postId)를 받아옵니ek
+
+
+Long countByPostId(Long postId);
+->
+특정 게시글ID(postID)에 달린 댓글의 대수를 Long 타입으로 반환한다.
+
+
+
+즉,
+List<Comment> findByPostId(Long postId); 가 "댓글 목록 가져오기" 라면,
+Long countByPostId(Long postId); 는 "댓글 몇 개인지 개수만 가져오기" 입니다
+
+
+
+@Query(
+    value = "SELECT c FROM Comment c JOIN FETCH c.author JOIN FETCH c.post",
+    countQuery = "SELECT COUNT(c) FROM Comment c"
+)
+Page<Comment> findAllForAdmin(Pageable pageable);
+
+
+1. 어노테이션 @Query
+직접 JPQL 쿼리를 작성해서 실행하도록 지정합니다
+value : 실제 데이터 조회 쿼리
+countQuery : 페이징 처리를 위한 전체 개수 조회 쿼리
+
+
+2. value 쿼리
+SELECT c FROM Comment c
+JOIN FETCH c.author
+JOIN FETCH c.post
+
+Comment 엔티티 (c)를 조회
+JOIN FETCH c.author -> 댓글 작성자(author) 엔티티를 즉시 함께 가져옴
+JOIN FETCH c.post -> 댓글이 속한 게시글(post) 엔티티도 즉시 함께 가져옴
+즉, 댓글을 가져올 때 작성자와 게시글 정보를 한 번에 조인해서 가져옴 -> N + 1 문제 방지 효과
+
+
+3. countQuery
+SELECT COUNT(c) FROM Commnet c
+->
+전체 댓글 수를 세는 쿼리
+Page<Comment>를 반환할 때 총 데이터 개수 계산용으로 사용됩니다
+
+
+4. 리턴 타입
+Page<Comment>
+페이징 처리된 댓글 목록을 반환합니다
+Page 객체에는 댓글 리스트뿐만 아니라 전체 페이지 수, 현재 페이지 번호, 전체 데이터 개수 등 페이징 관련 정보가 포함됩니다
+
+
+5. 파라미터
+Pageable pageable
+스프링에서 제공하는 페이징 파라미터 객체
+page, size, sort 등의 정보를 담습니다
+
+
+countQuery =
+페이징(Pageable)을 사용할 때 전체 데이터 개수를 구하기 위한 쿼리
+
+
+@Query(
+    value = "SELECT c FROM Comment c JOIN FETCH c.author JOIN FETCH c.post",
+    countQuery = "SELECT COUNT(c) FROM Comment"
+)
+Page<Comment> findAllForAdmin(Pageable pageable);
+
+
+
+
+
+@Query(
+    value = "SELECT c FROM Comment c JOIN FETCH c.author JOIN FETCH c.post" +
+            "WHERE LOWER(c.content) LIKE LOWER(CONCAT('%', :searchm '%'))",
+    countQuery = "SELECT COUNT(c) FROM Comment c" +
+                 "WHERE LOWER(c.content) LIKE LOWER(CONCAT('%'), :search, '%'))"
+    )
+    Page<Comment> findByContentContainingIgnoreCaseForAdmin(@Param("search") String search, Pageable pageable);
+
+
+
+1. value 쿼리
+
+SELECT c
+FROM Comment c
+JOIN FETCH c.author
+JOIN FETCH c.post
+WHERE LOWER(c.content) LIKE LOWER(CONCAT('%', : searchm '%'))
+
+Comment 엔티티(c)를 조회
+댓글(Comment)을 가져오면서 작성자(author)와 게시글(post)을 즉시 조인(FETCH JOIN)해서 같이 가져옴
+->
+N + 1 문제 방지
+
+WHERE LOWER(c.content) LIKE LOWER(CONCAT('%', :search, '%'))
+->
+댓글 내용(content)을 소문자로 변환 후, 검색어( :search )도 소문자로 변환해서 포함 여부 검사 (대소문자 구분 없이 검색 가능)
+
+
+2. countQuery
+SELECT COUNT(c)
+FROM Comment c
+WHERE LOWER(c.contet)  LIKE LOWER(CONCAT('%', :search, '%'))
+
+페이징 처리를 위한 전체 개수 조회 쿼리
+value 쿼리와 동일한 조건 (댓글 내용에 검색어 포함)을 적용하여 개수만 셈
+
+
+
+3. 리턴 타입
+Page<Comment>
+페이징된 댓글 목록을 반환
+댓글 리스트 뿐만 아니라 총 페이지 수, 현재 페이지, 전체 댓글 개수 등 페이징 메타 데이터도 포함됨
+
+
+4. 파라미터
+@Param("search") String search
+JPQL 쿼리에서 :search 자리에 들어갈 값
+
+Pageable pageable
+페이징 처리정보 (page 번호, size, 정렬 조건 등)
+
+
+
+@Query(
+    value = "SELECT c FROM Comment c
+             JOIN FETCH c.author
+             JOIN FETCH c.post
+             WHERE LOWER(c.content) LIKE LOWER(CONCAT('%'), :search,'%')",
+
+    countQuery = "SELECT COUNT(c) FROM Comment c WHERE LOWER(c.content)
+    LIKE LOWER(CONCAT('%', :search, '%'))")
+
+    Page<Comment>
+    findByContentContainingIgnoreCaseForAdmin(@Param("search") String search, Pageable pageable);
+
+    ->
+    "관리자(Admin) 용도로,
+    댓글 내용에 특정 검색어가 포함된 댓글들을(대소문자 구분 없이) 조회하고,
+    작성자와 게시글을  함께 조인해서 가져오며,
+    결과는 페이징 처리된 형태로 반환한다."
+
+
+
+
+WHERE LOWER(c.content) LIKE LOWER(CONCAT('%', :search, '%'))
+
+1. LOWER(c.content)
+댓글 내용(c.content)을 모두 소문자로 변환합니다
+이유 : 검색 시 대소문자 구분을 없애기 위해
+
+2. :search
+메서드 파라미터로 전달받은 검색어입니다
+예 : search = "Hello" 라면, :search -> "Hello"
+
+3.
+
+
