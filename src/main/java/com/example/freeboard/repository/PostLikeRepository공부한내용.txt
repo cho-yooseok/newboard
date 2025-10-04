@@ -1,0 +1,50 @@
+해설
+메서드별 해설 요약
+1. findByPostAndUser(Post post, User user)
+특정 게시글에 특정 사용자가 누른 "좋아요"엔티티 조회
+반환 타입이 Optional -> 존재하지 않을 수도 있기 때문에 null 대신 Optional 로 처리
+
+
+2. existsByPostAndUser(Post post, User user)
+특정 게시글에 사용자가 좋아요를 눌렀는지 여부 확인 (true/ false)
+
+
+3. countByPost(Post post)
+특정 게시글의 좋아요 개수 세기
+
+4. deleteByUser(User user)
+특정 사용자가 누른 모든 좋아요 삭제 (회원 탈퇴 처리 등에 유용)
+@Transactional, @Modifying 을 붙여서 DB에 직접 DELETE 쿼리 실행 가능
+
+->
+이 Repository 는 주로 좋아요 기능 (누르기, 취소하기, 개수 세기, 회원 탈퇴 시 정리)와 관련된 데이터 처리를 담당합니다
+
+
+
+
+주석
+@Repository // 스프링이 이 인터페이스를 Repository 빈으로 관리하도록 지정
+public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
+    // JpaRepository<PostLike, Long>
+    // -> PostLike 엔티티를 관리하며, PK 타입은 Long임
+    // -> save(), findById(), findAll(), deleteById() 등 기본 CRUD 메서드를 자동 제공
+
+    // 특정 게시글(Post)과 사용자(User) 조합으로 좋아요(PostLike) 객체를 조회
+    Optional<PostLike> findByPostAndUser(Post post, User user);
+
+    // 특정 게시글(Post)과 사용자(User) 조합이 이미 존재하는지 확인
+    // -> 사용자가 해당 게시글에 좋아요를 눌렀는지 여부 확인용
+    boolean existsByPostAndUser(Post post, User user);
+
+    // 특정 게시글(Post)에 눌린 좋아요 수를 카운트
+    // -> 게시글의 총 좋아요 개수 조회
+    long countByPost(Post post);
+
+
+    // 사용자 삭제 메서드
+    // 특정 사용자(User)가 누른 모든 좋아요(PostLIke)를 삭제
+    // -> 회원 탈퇴 시 그 사용자가 눌렀던 좋아요를 함께 정리할 때 사용
+    @Transactional      // 메서드 실행을 트랜잭션으로 묶어줌
+    @Modifying          // SELECT가 아닌 DELETE/ UPDATE 쿼리를 실행하는 메서드임을 표시
+    void deleteByUser(User user);
+}
