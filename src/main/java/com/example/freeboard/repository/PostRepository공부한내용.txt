@@ -1,0 +1,266 @@
+해설
+이 리포지토리는 게시글(Post)엔티티의 데이터 접근 계층 역할을 하며, 일반 사용자용 / 관리자용 조회 기능과 소프트삭제(soft delete)기능까지
+포함하고 있다.
+
+
+주요 포인트 정리
+1. 일반 사용자용 메서드
+findAllWithAuthor : 삭제되지 않은 게시글 + 작성자 즉시 로딩
+findByIdWithAuthor : 특정 게시글 id 조회
+findByTitileContainingIgnoreCaseOrContentContaintingIgnoreCaseWithAuthor :
+검색(제목/내용, 대소문자 무시)
+
+2. 관리자용 메서드
+findAllForAdmin : 삭제 여부 상관없이 모든 게시글 조회
+findByTitileContainingIgnoreCaseOrContentContainingIgnoreCaseForAdmin :
+모든 게시글 검색
+
+3. 소프트 삭제 기능
+softDeleteById : deleted = true 로 변경 -> 실제 DB 삭제는 아님
+restoreById : deleted = false 로 변경 -> 복원 가능
+
+4. 사용자 삭제 기능
+deleteByAuthor(User author) : 특정 사용자가 작성한 글 전체 삭제
+
+
+이 Repository는 게시글의 CRUD + 검색 + 소프트 삭제/ 복원 + 관리자 기능 까지 담당합니다
+
+
+
+
+
+주석
+@Repository // 스프링이 해당 인터페이스를 Repository 빈으로 등록
+public interface PostRepository extends JpaRepository<Post, Long> {
+    // JpaRepository<Post, Long> -> Post 엔티티의 CRUD 기본 메서드 제공 (PK 타입 : Long)
+
+    // 일반 사용자 기능
+
+    // 모든 활성 게시글 조회 (삭제되지 않은 글만)
+    // JOIN FETCH로 author(User)를 즉시 로딩하여 N+1 문제 방지
+    @Query(value = "SELECT p FROM Post p JOIN FETCH p.author WHERE p.deleted = false",
+            countQuery = "SELECT COUNT(p) FROM Post p WHERE p.deleted = false")
+    Page<Post> findAllWithAuthor(Pageable pageable);
+
+    // 단일 활성 게시글 조회 (id로 조회 + author 즉시 로딩)
+    @Query("SELECT p FROM Post p JOIN FETCH p.author WHERE p.id = :id AND p.deleted = false")
+    Optional<Post> findByIdWithAuthor(@Param("id") Long id);
+
+    // 게시글 검색 (제목 + 내용, 대소문자 무시, 삭제되지 않은 게시글만)
+    @Query(value = "SELECT p FROM Post p JOIN FETCH p.author" +
+            "WHERE p.deleted = false AND" +
+            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))", +
+            "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :searchKeyword, '%')))",
+           countQuery = "SELECT COUNT(p) FROM Post p" +
+            "WHERE p.deleted = false AND" +
+            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))" +
+            "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :searchKeyword, '%')))")
+    Page<Post> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCaseWithAuthor(
+            @Param("searchKeyword") String searchKeyword,
+            Pageable pageable);
+
+
+    // === 관리자 기능 ===
+
+    // 모든 게시글 조회 (삭제 여부 무시, author 즉시 로딩)
+    @Query(value = "SELECT p FROM Post p JOIN FETCH p.author",
+            countQuery = "SELECT COUNT(p) FROM Post p")
+    Page<Post> findAllForAdmin(Pageable pageable);
+
+    // 관리자 전용 검색(삭제 여부 무시, 제목/ 내용 검색)
+    @Query(value = "SELECT p FROM Post p JOIN FETCH p.author" +
+            "WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))" +
+            "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))",
+            countQuery = "SELECT COUNT(p) FROM Post p" +
+            "WHERE LOWER(p.titile) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))" +
+            "OR LOWER(p.content) LIKE LOWER(CONCAT('%', :searchKeyword, '%'))")
+    Page<Post> findByTitileContainingIgnoreCaseOrContentContainingIgnoreCaseForAdmin(
+        @Param("searchKeyword") String searchKeyword,
+        Pageable pageable);
+
+    // 소프트 삭제 기능
+
+    // 게시글 삭제 처리 (실제 삭제x, deleted 플래그 true로 업데이트)
+    @Modifying      // DML(UPDATE, DELETE) 쿼리임을 표시
+    @Query("UPDATE Post p SET p.deleted = true WHERE p.id = :id")
+    void softDeleteById(@Param("id") Long id);
+
+    // 게시글 복원 처리 (deleted 플래그 false로 업데이트)
+    @Modifying
+    @Query("UPDATE Post p SET p.deleted = false WHERE p.id = :id")
+    void restoredById(@Param("id") Long id);
+
+    // 사용자 삭제 메서드
+    // 특정 사용자가 작성한 모든 게시글 삭제 (하드 삭제)
+    @Transactional
+    @Modifying
+    void deleteByAuthor(User author);
+}
+
+
+    ))
+
+
+            )
+}
+
+
+
+
+
+
+해설
+Optional<Post> findByIdWithAuthor(@Param("id") Long id);
+
+해석
+Optional<Post>
+반환 타입은 Post엔티티이지만, 결과가 없을 수도 있으므로 Optional로 감싼 형태
+->
+조회된 게시글이 없으면 Optional.empty()  반환
+있으면 Optional<Post>로 감싸서 반환.
+
+findByIdWithAuthor
+메서드 이름은 관례적으로 id 기준 조회를 의미
+여기서는 게시글 id로 조회하면서 작성자(author)도 함께 조회하는 메서드라는 의미로 네이밍한것
+실제 JPQL은 @Query에 따로 정의되어 있음 -> JOIN FETCH p.author
+
+@Param("id") Long id
+:id 라는 이름의 파라미터에 자바 메서드 매개변수 id 값을 바인딩
+예: findByIdWithAuthor(10L)
+-> 쿼리의 :id 부분에 10이 들어감
+
+
+Optional<Post> findByIdWithAuthor(@Param("id") Long id);
+
+
+전체 의미
+->
+id가 특정 값인 게시글(Post)을 조회하는데, 작성자(author) 정보도 함께 불러오고, 결과는 Optional 로 반환한다
+
+
+
+
+@Query("SELECT p FROM Post p JOIN FETCH p.author WHERE p.id = :id AND p.deleted = false")
+
+
+
+
+
+
+@Modifying      // DML(UPDATE, DELETE) 쿼리임을 표시
+@Query("UPDATE POST p SET p.deleted = true WHERE p.id = :id")
+void softDeleteById(@Param("id") Long id);
+
+
+@Modifying
+이 메서드가 SELECT 조회가 아닌, DB값을 바꾸는 DML(UPDATE, DELETE, INSERT) 쿼리임을 표시
+
+JPA기본 @Query 는 SELECT용이므로, UPDATE/DELETE 실행할 때 반드시 @Modifying을 붙여야 실행됨
+
+
+
+@Query("UPDATE POST p SET p.deleted = true WHERE p.id = :id")
+JPQL(객체지향 쿼리)로 작성된 쿼리
+의미:
+Post엔티티에서 id가 특정 값인 데이터를 찾아,
+deleted 값을 true로 변경한다
+즉, 실제 DB에서 행을 삭제하는 게 아니라 삭제 플래그(deleted)만 true로 바꾸는 "소프트 삭제"를 구현한 것
+
+
+3. void softDeleteById(@Param("id") Long id);
+메서드 이름 : softDeleteById
+특정 id를 가진 게시글을 소프트 삭제 처리한다는 의미
+파라미터: @Param("id") Long id
+->
+삭제 처리할 게시글의 id 값
+
+
+4. 실제 SQL로 변환 예시
+만약 id = 5를 넣으면 ,sql은 이렇게 실행된다
+
+sql
+UPDATE post
+SET deleted = true
+WHERE id = 5;
+
+최종해석
+이 메서드는 게시글을 실제로 삭제하지 않고, id에 해당하는 게시글의 deleted 값을 true 로 업데이트(소프트 삭제) 하는 기능을 한다
+
+원래 DELETE 대신 이렇게 soft delete를 쓰면 데이터 보존, 복구 가능성, 로그 추적 등의 장점이 있다.
+
+@Modifying
+@Query("UPDATE Post p SET p.deleted = false WHERE p.id = :id")
+void restoredById(@Param("id")) Long id);
+
+@Modifying
+이 메서드가 데이터 변경용(DML) 쿼리(UPDATE/DELETE/INSERT)임을 명시
+기본 @Query는 조회(SELECT)전용이므로, UPDATE 실행 시 꼭 필요합니다
+
+@Query("UPDATE Post p SET p.deleted = false WHERE p.id = :id")
+JPQL(엔티티 대상으로 하는 쿼리) 구문
+의미
+Post엔티티에서 id가 특정 값인 게시글을 찾아,
+deleted 값을 false로 바꾼다.
+즉, 삭제된 상태 -> 복구된 상태로 변경하는 쿼리
+
+void restoredById(@Param("id") Long id);
+메서드 이름 : restoredById
+-> 특정 id를 가진 게시글을 복구한다는 의미
+파라미터: @Param("id") Long id
+-> 복구할 게시글의 ID
+
+
+실제 SQL 변환 예시
+만약 id = 10 이라면 DB에서 실행되는 SQL은 대략:
+
+sql
+UPDATE post
+SET deleted = false
+WHERE id = 10;
+
+
+이 메서드는 id에 해당하는 게시글의 deleted 값을 false로 없데이트 하여, 소프트 삭제된 게시글을 다시 복구한다.
+
+
+즉, softDeleteById() 는 삭제 처리 (= deleted = true),
+restoredById()는 복구처리(= deleted = false)
+
+
+
+
+@Transactional
+@Modifying
+void deleteByAuthor(User author);
+
+
+@Transactional
+메서드 실행 시 트랜잭션(Transaction)이 적용됨을 의미
+즉, 실행 도중 에러가 나면 롤백(rollback)되고, 정상 완료되면 커밋(commit)됨
+데이터 삭제/수정 작업은 원자성 보장이 필요하므로 필수
+
+
+@Modifying
+이 메서드가 단순 조회(SELECT)가 아닌, 데이터 변경(DML: DELETE/UPDATE/INSERT) 쿼리임을 표시
+spring Data JPA가 내부적으로 delete 쿼리를 실행하게 만듦.
+
+
+void deleteByAuthor(User author);
+deleteByAuthor는 JPA메서드 이름 기반 쿼리 메서드
+규칙 : deleteBy + 엔티티필드명 -> 해당 조건으로 삭제 실행
+
+즉,
+Post엔티티에서 author컬럼(작성자)이 주어진 User author 인 모든 게시글을 삭제
+
+
+실제 동작 예시
+User user =userRepository.findById(1L).get();
+postRepository.deleteByAuthor(user);
+
+sql 변환
+->
+DELETE FROM post WHERE author_id = 1;
+
+
+
+최종 해석
+deleteByAuthor(User author) 메서드는 특정 사용자가 작성한 모든 게시글을 트랜잭션 안에서 삭제하는 메서드이다
