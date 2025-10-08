@@ -1,0 +1,35 @@
+@Repository // 스프링이 이 인터페이스를 Repository(데이터 접근 계층)로 인식하도록 설정
+public interface UserRepository extends JpaRepository<User, Long> {
+    /**
+    username으로 User를 조회하는 메서드
+    Spring Data JPA의 메서드 네이밍 규칙에 따라 쿼리가 자동 생성됨
+    SELECT u FROM User u WHERE u.username = :username
+    결과가 없을 수도 있으므로 Optional로 감싸서 반환
+    */
+    Optional<User> findByUsername(String username);
+}
+
+해설
+1. public interface UserRepository extends JpaRepository<User, Long>
+JpaRepository<User, Long> 상속
+User -> 관리할 엔티티 클래스
+Long -> User 엔티티의 기본 키(Pk) 타입
+기본적으로 save(), findById(), findAll(), deleteById() 같은 CRUD 메서드를 자동으로 제공받음
+
+2. @Repository
+스프링이 이 인터페이스를 Repository 빈(Bean)으로 등록
+
+3. Optional<User> findByUsername(String username)
+쿼리 메서드(Query Method): 메서드 이름 기반으로 JPQL 쿼리가 자동 생성됨
+내부 JPQL
+
+SELECT u FROM User u WHERE u.username = :username
+
+결과가 없을 수 있으므로 Optional<User>로 반환 -> null 대신 안전하게 값 존재 여부 확인 가능
+
+
+
+정리
+UserRepository는 User엔티티에 대해 기본 CRUD 기능을 제공하면서
+추가로 username 을 기준으로 사용자를 검색할 수 있는 메서드를 제공하는 데이터 접근 계층 인터페이스입니다
+
