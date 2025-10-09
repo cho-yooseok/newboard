@@ -186,6 +186,98 @@ final: 한 번 초기화 되면 변경할 수 없음 (상수처럼 동작)
 
 
 Logger
-Logger는 로그를 기록하는 객체타입니다
+Logger는 로그를 기록하는 객체타입입니다
+주로 코드 실행 중에 발생한 정보, 경고, 오류 메시지를 콘솔이나 파일로 출력할 때 사용됩니다
+org.slf4j.Logger 인터페이스에 속합니다
 
 
+LoggerFactory.getLogger(JwtAuthenticationFilter.class)
+LoggerFactory는 로거(Logger)를 생성하는 클래스입니다
+getLogger(클래스명.class)를 호출하면, 해당 클래스 전용의 로거를 만들어줍니다
+즉, JwtAuthenticationFilter 클래스에서 발생하는 로그를 구분해서 기록할 수 있게 해줍니다
+
+정리하면
+이 코드는 JwtAuthenticationFilter 클래스에서 로그를 출력하기 위한 로거(logger)를 정의한 것입니다
+실행 중에 "JWT 토큰 검증 실패", "인증 성공"같은 로그 메시지를 남길 때 사용됩니다.
+
+
+예시
+logger.info("JWT 토큰 검증 시작")
+logger.error("JWT 토큰이 유효하지 않습니다", e;)
+
+이런 식으로 logger를 이용해 콘솔이나 로그 파일에 메시지를 남길 수 있습니다
+
+
+
+private static final Logger logger = LoggwerFactory.getLogger(JwtAuthenticationFilter.class);
+->
+"로그를 찍기 위한 도구(logger)를 만드는 코드" 입니다
+
+
+로그(logger)란?
+로그는 프로그램이 실행될 때 무슨 일이 일어났는지 기록하는 메시지입니다
+예를 들어, 콘솔에 이런걸 남기는 것입니다
+->
+[INFT] JWT 토큰 확인 시작
+[ERROR]  토큰이 유효하지 않습ㅈ니다
+
+이렇게 하면 나중에 문제가 생겼을 때 원인을 찾기 쉽습니다
+
+
+Logger
+로그를 찍는 도구의 타입입니다
+
+LoggerFactory.getLogger(...)
+로그 도구(Logger)를 실제로 만들어주는 공장(factory)같은 역할입니다
+
+JwtAuthenticationFilter.class
+"이 로그는 JwtAuthenticationFitler 클래스에서 나온 거야"하고 표시해 주는 부분입니다
+
+private static final
+프로그램이 실행되는 동안 하나만 만들고 바꾸지 않겠다 라는 뜻입니다
+
+
+
+
+
+private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+결과적으로 이 코드는
+JwtAuthenticationFilter 라는 클래스에서 로그를 찍을 수 있는 도구를 하나 만들자
+
+
+
+예시
+logger.info("JWT 검사 시작!");
+// 일반 정보 출력
+
+logger.error("JWT 토큰 오류!");
+// 오류 메시지 출력
+
+이렇게 logger를 이용해서 콘솔에 메시지를 찍을 수 있습니다
+그럼 개발자가 "아, 여기서 오류가 났구나" 하고 쉽게 알 수 있습니다
+
+
+
+
+
+private final JwtTokenProvider tokenProvider;
+->
+"이 클래스 안에서 JWT 토큰을 다루는 도구(tokenProvider)를 사용하겠다"
+(그 도구는 JwtTokenProvider 라는 다른 클래스에서 만들어진것입니다)
+
+
+private
+이 변수는 이 클래스 안에서만 사용할 수 있다.
+다른 클래스에서는 접근 불가능하다
+
+final
+한 번 만들어진 후에는 다시 바꿀 수 없다.
+즉, 이 변수는 고정이다
+
+JwtTokenProvider
+JWT 토큰을 만들고, 검증하고, 토큰에서 사용자 정보를 꺼내주는 역할을 하는 클래스타입이다
+
+tokenProvier
+실제로 그 클래스 객체를 담을 변수 이름이다.
+보통 "토큰을 제공하는 도구"라는 뜻으로 이렇게 이름을 짓는다
