@@ -281,3 +281,19 @@ JWT 토큰을 만들고, 검증하고, 토큰에서 사용자 정보를 꺼내�
 tokenProvier
 실제로 그 클래스 객체를 담을 변수 이름이다.
 보통 "토큰을 제공하는 도구"라는 뜻으로 이렇게 이름을 짓는다
+
+
+private final CustomUserDetailsService customUserDertailsService;
+
+CustomUserDetailService 타입의 객체를 customUserDetailsService 라는 이름으로 필드(멤버 변수)로 선언한 코드입니다
+이 객체는 사용자 정보를 불러오는 역할을 하는 서비스입니다
+
+
+private
+이 변수는 이 클래스 내부에서만 접근 가능합니다
+
+final
+한 번 초기화되면 바꿀 수 없는(재할당 불가)변수입니다
+
+CustomUserDetailsService
+사용자 정보를 가져오는 서비스 클래스 (직접 만든 커스텀 클래스)
