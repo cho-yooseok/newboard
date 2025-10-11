@@ -297,3 +297,306 @@ final
 
 CustomUserDetailsService
 사용자 정보를 가져오는 서비스 클래스 (직접 만든 커스텀 클래스)
+
+
+
+
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    throws ServletException, IOException {
+    }
+
+
+
+@Override
+부모 클래스(또는 인터페이스)의 메서드를 재정의(override) 한다는 뜻
+즉, 부모 클래스에 이미 있는 메서드를 내 클래스에서 새롭게 구현하겠다는 의미입니다
+
+여기서는 OncePerRequestFilter 클래스의 doFilterInternal() 메서드를 재정의하고 있습니다
+
+
+protected
+접근 제한자입니다
+같은 패키지나, 이 클래스를 상속받은 자식 클래스에서만 접근 가능합니다
+
+
+void doFilterInternal(...)
+doFilterInternal 은 HTTP요청이 들어올 때마다 실행되는 필터의 핵심 메서드입니다
+스프링 시큐리티에서는 요청이 들어올 때, 이 메서드 안에서
+JWT검증, 인증객체 설정, 로그 출력, 요청 차단 등의 작업을 합니다
+
+
+매개변수 설명
+(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+HttpServletRequest request
+-> 클라이언트(브라우저)가 보낸 요청 정보를 담고 있습니다
+(예: 헤더, 파라미터, URL 등)
+
+HttpServletResponse response
+->
+서버가 클라이언트에게 보낼 응답 정보를 담습니다
+
+
+
+FilterChain filterChain
+->
+여러 개의 필터가 순서대로 동작할 때,
+다음 필터로 요청을 넘겨주는 역할을 합니다
+
+즉,
+filterChain.doFilter(request, response)를 호출하면 다음 필터로 이동합니다
+
+
+throws ServletException, IOException
+메서드 실행 중 서블릿 관련 오류나 입출력 오류가 생길 수 있기 때믄에 이 두 예외를 던질 수 있다는 뜻
+
+
+
+정리하면 이 메서드는
+->
+HTTP 요청이 들어올 때마다 자동으로 호출되어, 필터 로직을 처리하는 메서드
+입니다
+
+JWT 인증필터(JwtAuthenticationFilter)라면 보통 여기서
+1. 요청 헤더에서 토큰 추출
+2. 토큰 유효성 검사
+3. 인증 정보(SecurityContext에 저장)
+4. 다음 필터로 요청 전달
+
+이런 과정을 수행하게 됩니다
+
+
+try {
+    String jwt = getJwtFromRequest(request);
+}
+
+
+try{...}
+에러(예외)가 발생할 수 있는 코드 블록을 감싸는 부분입니다
+try 안에서 에러가 생기면 프로그램이 바로 멈추지 않고,
+뒤쪽의 catch 블록에서 에러를 처리할 수 있습니다
+
+즉, "이 안의 코드 실행 중에 오류가 날 수도 있으니 대비하자"는 뜻입니다
+
+
+String jwt = ...
+jwt라는 문자열(String) 변수를 선언하고,
+그 안에 JWT 토큰 값을 저장한다는 뜻입니다
+
+
+getJwtFromRequest(request)
+request 객체(즉, 사용자의 HTTP 요청)안에서
+JWT 토큰을 꺼내오는 메서드입니다
+
+보통 JWT는 클라이언트가 보낼 때 HTTP 헤더에 담겨있습니다
+
+예를들어 이런 형태입니다 ->
+Authorization: Bearer eyJhdfjdkksvkldsjfklsdjafksdsdk...
+
+
+
+if(...)
+조건문입니다
+괄호 안의 조건이 true(참) 일 때만 {} 안의 코드를 실행합니다
+
+
+StringUtils.hasText(jwt)
+StringUtils 는 Spring Framework 에서 제공하는 유틸리티 클래스입니다
+hasText(String str) 메서드는
+문자열이
+null 이 아니고,
+공백이 아니며,
+길이가 0이 아닌 경우
+true를 반환합니다
+
+
+즉,
+jwt 라는 문자열이 비어 있지 않다
+를 검사하는 부분입니다
+
+StringUtils.hasText("abc")  -> true
+StringUtils.hasText("") -> false
+StringUtils.hasText("       ") -> false
+StringUtils.hasText(null)       -> false
+
+
+
+tokenProvider.validateToken(jwt)
+tokenProvider는 보통 JWT 관련 기능을 담당하는 클래스입니다
+(예 : JwtTokenProvider)
+
+이 메서드는 전달받은 jwt 토큰이
+만료되지 않았는지,
+서명이 올바른지,
+구조가 맞는지
+등을 검사해서 유효하면 true, 유효하지 않으면 false를 반환합니다
+
+
+
+
+
+
+if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+}
+
+if (...)
+조건문입니다
+괄호 안의 조건이 true(참)일 때만 {} 안의 코드를 실행합니다
+
+StringUtils.hasText(jwt)
+
+StringUtils는 Spring Framework에서 제공하는 유틸리티 클래스입니다
+
+hasText(String str) 메서드는
+문자열이
+null이 아니고,
+공백이 아니며,
+길이가 0이 아닌 경우
+-> true를 반환합니다
+
+즉,
+jwt 라는 문자열이 비어 있지 않다
+를 검사하는 부분입니다
+
+StringUtils.hasText("abc") -> true
+StringUtils.hasText("") -> false
+StringUtils.hasText("   ") -> false
+StringUtils.hasText(null) -> false
+
+
+tokenProvider.validateToken(jwt)
+tokenProvider는 보통 JWT 관련 기능을 담당하는 클래스입니다
+(예: jwtTokenProvider)
+이 메서드는 전달받은 jwt 토큰이
+만료되지 않았는지,
+서명이 올바른지,
+구조가 맞는지
+등을 검사해서 유효하면 true, 유효하지 않으면 false를 반환합니다
+
+즉,
+"이 토큰이 진짜인가"
+"만료된 건 아닌가?"
+를 확인하는 검증단계 입니다
+
+
+&&(AND 연산자)
+양쪽 조건이 모두 true일 때만 전체가 true가 됩니다
+즉,
+"jwt가 비어 있지 않고, 토큰이 유효한 경우에만 실행해라"
+라는 뜻입니다
+
+전체 해석
+"요청에서 꺼낸 JWT가 비어있지 않고(hasText(jwt))"
+유효한 토큰이면 (validateToken(jwt)),
+아래 코드를 실행한다.
+->
+즉, JWT가 존재하고 올바른 경우에만 인증 과정을 진행하도록 하는 조건문입니다
+이 조건이 false면
+즉, 토큰이 없거나 잘못된 경우
+그냥 다음 필터로 넘어가거나, 인증되지 않은 상태로 처리됩니다
+
+
+
+
+
+String username = tokenProvider.getUsernameFromJWT(jwt);
+이 한줄은 JWT안에 들어 있는 사용자 이름(username)을 꺼내오는 코드입니다
+
+String username = ...
+username 이라는 문자열(String) 변수를 선언하고ㅡ
+그 안에 값을 저장하겠다는 뜻입니다
+
+즉, 이 코드를 실행하면
+username 변수에 토큰 속 사용자 이름이 들어가게 됩니다
+
+
+tokenProvider
+JWT 관련 작업을 담당하는 객체입니다
+보통 클래스 이름이 JwtTokenProvider 이고,
+토큰을 생성 검증 정보 추출하는 여러 메서드를 가지고 있습니다
+
+
+getusernameFromJWT(jwt)
+전달받은 JWT 문자열(jwt) 안에서
+username(사용자 이름 또는 사용자 식별자)을 추출하는 메서드입니다
+
+
+
+
+
+
+Stirng username = tokenProvider.getUsernameFromJWT(jwt);
+"JWT 토큰 안에서 사용자 이름을 꺼내서 username 변수에 저장한다"
+
+
+
+
+UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+->
+JWT에서 꺼낸 사용자 이름 (username)을 이용해서
+그 사용자에 대한 상세 정보(UserDetails)를 불러오는 부분
+
+UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+
+UserDetails
+UserDetails는 Spring Security에서 제공하는 인터페이스입니다
+한마디로 사용자 한 명의 정보 를 담는 객체의 형태를 정의한 것입니다
+
+UserDetails 안에는 이런 정보들이 들어 있습니다
+
+String getUsername();   // 사용자 이름
+String getPassword();   // 비밀번호 (암호화된 형태)
+Collection<? extends GrantedAuthority> getAuthorities();    // 권한 (ROLE_USER, ROLE_ADMIN) 등
+
+등등
+
+즉, 인증/인가 과정에서 스프링 시큐리티가 필요한 사용자 정보의 표준 형식이다
+
+
+
+
+customUserDetailsService
+이건 사용자 정보를 불러오는 서비스 객체입니다
+일반적으로 CustomUserDetailsService 클래스는
+UserDetailsService 인터페이슬르 구현(implements)해서 만들어집니다
+
+loadUserByUsername(username)
+이 메서드는 DB에서 username을 이용해 사용자 정보를 조회하고ㅡ
+그 결과를 UserDetails 객체로 만들어 반환합니다
+
+
+전체 해석
+JWT 토큰에서 꺼낸 username으로, 데이터베이스에서 해당 사용자의 정보를  찾아
+UserDetails 객체로 가져온다.
+
+JWT에서 사용자 이름을 얻고
+DB에서 그 사용자를 조회해
+스프링 시큐리티가 이해할 수 있는 형태(UserDetails)로 변환하는 단계입니다
+
+요약
+jwt -> username -> userDetails
+토큰 속 사용자 -> DB에서 실제 사용자 정보 불러오기
+
+UsernamePsswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+UsernamePasswordAuthenticationToken
+SpringSecurity에서 제공하는 인증 객체(Authentication)의 한 종류입니다
+로그인 인증 정보 (사용자, 비밀번호, 권한 등)를 담는 클래스입니다
+
+즉,
+이 사용자는 인증된 사용자야
+라고 시큐리티에게 알려주는 역할을 합니다
+
+new UsernamePasswordAuthenticationToken(...)
+새로운 인증 객체를 생성한다는 뜻입니다
+생성자에 들어가는 인자는 보통 다음 세가지 입니다
+
+new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+    principal,      // 사용자 정보(보통 UserDetails)
+    credentials,    // 비밀번호 (여기서는 이미 인증되었으므로 null로 둠)
+    authorities     // 권한 목록 (ROLE_USER, ROLE_ADMIN)
+);
+
+
+
+
