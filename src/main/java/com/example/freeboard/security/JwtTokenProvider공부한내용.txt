@@ -1,0 +1,22 @@
+이 클래스는 JWT(Json Web Token)을 생성하고, 검증하며, 토큰에서 사용자 정보를 추출하는 핵심역할을 합니다
+
+
+역할
+메서드
+설명       // 순서로 기술
+
+
+
+비밀키 관리
+getSigningKey()
+문자열 비밀키 -> HMAC용 SecretKey 객체로 변환
+
+JWT 생성
+generateToken()
+사용자 정보 + 만료 시간 + 서명 ->
+JWT 문자열 생성
+
+
+
+
+

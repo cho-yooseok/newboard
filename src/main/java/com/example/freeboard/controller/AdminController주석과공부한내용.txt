@@ -29,3 +29,17 @@ ResponseEntity.noContent().build() -> 204 No Content (본문도 없고, 상태 �
 ResponseEntity.ok().build() -> 200 OK  + 본문 없음
 
 
+
+
+
+
+배운 내용
+Spring의 @RestController와 @RequestMapping 어노테이션 사용법을 배웠다.
+
+@RestController는 클래스 내부의 모든 메서드가  기본적으로 @ResponseBody 가 적용되어 JSON 형태로 데이터를 반환하게 해주며,
+@RequestMapping 은 HTTP요청 경로를 컨트롤러 메서드에 매핑해주는 역할을 한다.
+
+@RestController
+@RequestMapping("/api/todos")
+를 사용하면 /api/todos 로 들어오는 요청을 해당 컨트롤러가 자동으로 처리하고, 응답은 HTML이 아닌 JSON 형식으로 반환된다는점을 이해했다.
+
