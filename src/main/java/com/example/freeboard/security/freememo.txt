@@ -1,0 +1,140 @@
+// 패키지 경로 (이 클래스가 속한 위치를 지정)
+package com.example.freeboard.security;
+
+// JWT 관련 라이브러리 import (토큰 생성, 검증 등을 도와줌)
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+
+// 스프링 관련 import
+import org.springframework.beans.factory.annotation.Value; // 설정값 주입용
+import org.springframework.security.core.Authentication; // 로그인된 사용자 정보
+import org.springframework.security.core.userdetails.UserDetails; // 사용자 세부정보
+import org.springframework.stereotype.Component; // 스프링이 자동으로 관리하는 클래스
+
+// 암호화 관련 클래스
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.nio.charset.StandardCharsets;
+
+// 로그 출력용
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+// @Component : 이 클래스를 스프링이 관리하는 "빈(Bean)"으로 등록
+@Component
+public class JwtTokenProvider {
+
+    // Logger : 프로그램 실행 중에 로그(에러, 정보 등)를 찍기 위해 사용
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+
+    // application.properties 파일의 설정값을 읽어와서 변수에 넣음
+    // 예: app.jwtSecret=MySecretKey 이런 식으로 설정됨
+    @Value("${app.jwtSecret}")
+    private String jwtSecret;
+
+    // JWT의 만료 시간 (밀리초 단위)
+    // 예: app.jwtExpirationInMs=3600000 (1시간)
+    @Value("${app.jwtExpirationInMs}")
+    private int jwtExpirationInMs;
+
+    // 실제로 서명(암호화)에 사용할 키
+    private SecretKey signingKey;
+
+    /**
+     * getSigningKey() 메서드
+     * - jwtSecret 문자열을 SecretKey 객체로 변환하여 반환
+     * - 한 번 만들어두면 다시 만들지 않음 (효율성을 위해)
+     */
+    private SecretKey getSigningKey() {
+        // 아직 키가 만들어지지 않았다면 새로 생성
+        if (this.signingKey == null) {
+            // 문자열 비밀키를 바이트 배열로 변환 (UTF-8 인코딩)
+            byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+
+            // 바이트 배열을 기반으로 HMAC-SHA512 방식의 키 생성
+            this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+        }
+        // 이미 만들어졌으면 기존 키를 그대로 반환
+        return this.signingKey;
+    }
+
+    /**
+     * generateToken() 메서드
+     * - 로그인된 사용자 정보를 받아 JWT(토큰)을 만들어서 반환
+     * - 토큰 안에는 "사용자 이름", "발급 시간", "만료 시간" 정보가 들어감
+     */
+    public String generateToken(Authentication authentication) {
+        // 인증 객체에서 사용자 정보 꺼내기
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        // 현재 시각
+        Date now = new Date();
+
+        // 만료 시간 = 현재시간 + jwtExpirationInMs(예: 1시간 후)
+        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+
+        // JWT 생성
+        return Jwts.builder() // 토큰 빌더 시작
+                .setSubject(userDetails.getUsername()) // 토큰의 주제(사용자 이름)
+                .setIssuedAt(new Date()) // 발급 시간
+                .setExpiration(expiryDate) // 만료 시간
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512) // 서명 (비밀키로 암호화)
+                .compact(); // 최종적으로 문자열 형태의 JWT 생성
+    }
+
+    /**
+     * getUsernameFromJWT() 메서드
+     * - 전달받은 토큰에서 "사용자 이름"을 꺼내는 기능
+     * - 토큰의 payload 부분에 있는 subject(=username) 값을 읽어옴
+     */
+    public String getUsernameFromJWT(String token) {
+        // JWT를 파싱(해석)하고, 내부의 Claims(데이터 덩어리)를 얻음
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey()) // 검증할 때 사용할 서명키 지정
+                .build() // 파서(parser) 생성
+                .parseClaimsJws(token) // 실제 토큰을 파싱하여 검증
+                .getBody(); // 토큰 본문(Claims) 가져오기
+
+        // 토큰 안에 있는 사용자 이름(subject) 반환
+        return claims.getSubject();
+    }
+
+    /**
+     * validateToken() 메서드
+     * - 토큰이 유효한지 확인하는 메서드
+     * - 서명, 만료 여부, 구조 등이 올바른지 검사
+     */
+    public boolean validateToken(String authToken) {
+        try {
+            // JWT를 검증(파싱)할 때 오류가 없다면 유효한 토큰
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey()) // 같은 비밀키로 검증
+                    .build()
+                    .parseClaimsJws(authToken);
+
+            // 여기까지 에러 없이 실행되면 토큰은 정상
+            return true;
+        }
+        // 아래부터는 각각의 예외 상황 처리
+        catch (SignatureException ex) {
+            // 서명이 잘못된 경우 (비밀키 불일치)
+            logger.error("유효하지 않은 JWT 서명입니다.");
+        } catch (MalformedJwtException ex) {
+            // 형식이 잘못된 토큰
+            logger.error("유효하지 않은 JWT 토큰입니다.");
+        } catch (ExpiredJwtException ex) {
+            // 토큰의 유효기간이 지난 경우
+            logger.error("만료된 JWT 토큰입니다.");
+        } catch (UnsupportedJwtException ex) {
+            // 지원하지 않는 형식의 토큰
+            logger.error("지원되지 않는 JWT 토큰입니다.");
+        } catch (IllegalArgumentException ex) {
+            // 토큰이 비어있거나 잘못된 문자열인 경우
+            logger.error("JWT 클레임 문자열이 비어있습니다.");
+        }
+
+        // 예외 발생 시 false 반환 (유효하지 않음)
+        return false;
+    }
+}

@@ -16,7 +16,26 @@ generateToken()
 사용자 정보 + 만료 시간 + 서명 ->
 JWT 문자열 생성
 
+JWT 파싱
+getUsernameFromJWT()
+토큰에서 username(=subject) 추출
+
+JWT 검증
+validateToken()
+서명, 형식, 만료 여부 등을 체크
 
 
+이 클래스의 실제 사용 흘므
+1. 사용자가 로그인 하면 Authentication 객체가 생성됨
+2. generateToken() 이 호출되어 JWT 발급
+3. 클라이언트는 JWT를 Authorization: Bearer <token> 헤더로 전송
+4. 서버에서는 validateToken() 으로 검증
+5. 유효한 경우 getUsernameFromJWT()로 사용자 식별
+
+
+
+
+
+주석
 
 
